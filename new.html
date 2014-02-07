@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<link rel="stylesheet" href="/public/dist/css/bootstrap.css">
+		<link rel="stylesheet" href="/public/dist/css/bootstrap-theme.css">
+		<script src="/public/dist/js/bootstrap.js"></script>
+
+<!--
+Script features:
+- Listen for changes on the source type selector. Update the ui in association to that.
+- Listen for click on GO GO button. Load information. Send shit to the server making it persistent and redirect to the repsonded presentation id.
+- Detect selected type and load information into javascript structure
+- Validate javascript structure.
+- Listen for key up and run validation.
+-->
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<!-- Maybe it should just be a number of sources! LOL :D -->
+				<div class="col-md-6">
+					<h3 class="text-center">Slide source</h3>
+					<select class="form-control">
+						<option>SlideShare.net</option>
+						<option>Prezi.com</option>
+					</select>
+					<div class="form-group">
+						<label for="inputEmail3" class="col-md-2 control-label">Email</label>
+						<div class="col-md-10">
+							<input type="email" class="form-control" id="inputEmail3" placeholder="Link">
+						</div>
+					</div>
+				</div>
+				<div class="col-md-6">
+					<h3 class="text-center">Video or audio source</h3>
+					<select class="form-control">
+						<option>YouTube.com</option>
+						<option>Vimeo.com</option>
+					</select>
+				</div>
+			</div>
+			<div class="row">
+				<div class="col-md-12">
+					<button type="button" class="btn btn-lg btn-primary col-md-12">I've added the sources, GO!</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
