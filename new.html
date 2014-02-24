@@ -1,10 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<link rel="stylesheet" href="/public/dist/css/bootstrap.css">
-		<link rel="stylesheet" href="/public/dist/css/bootstrap-theme.css">
-		<script src="/public/dist/js/bootstrap.js"></script>
-
 <!--
 Script features:
 - Listen for changes on the source type selector. Update the ui in association to that.
@@ -13,37 +9,232 @@ Script features:
 - Validate javascript structure.
 - Listen for key up and run validation.
 -->
+	<style>
+
+/* hsl(0-360,85%,55%) */
+	body{
+		background: hsl(280,50%,22%);
+		color:white;
+		font-family:verdana;
+		padding: 0 50px;
+	}
+
+	h1, h2, h3, h4, h5, h6{
+		margin:0;
+	}
+
+	h1{
+		margin-bottom: 20px;
+	}
+
+
+	#preview-container{
+		float:left;
+		width:68%;
+	}
+	#preview-container .preview{
+		float:left;
+		height:349px;
+		width:560px;
+		margin-right: 30px;
+	}
+	#preview-container .preview h2{
+		width:100%;
+		margin: 0;
+		float: left;
+		color: white;
+		line-height: 50px;
+	}
+	#preview-container .preview h2 span.viewport{
+		padding:10px 15px;
+		background: rgba(255,255,255,0.3);
+	}
+	#preview-container .preview h2 span.source{
+		padding:10px;
+	}
+	#preview-container .preview .media{
+		width:100%;
+		margin:0;
+		height:300px;
+		display:block;
+		background:black;
+		clear:both;
+	}
+	#sources-container{
+		float:left;
+		width:30%;
+		height: 200px;
+	}
+	#sources-container ul{
+		list-style: none;
+		padding:0;
+		margin:0;
+	}
+	#sources-container li{
+		list-style: none;
+		width: 100%;
+		line-height: 45px;
+		padding-left:10px;
+		font-size: 20px;
+	}
+
+	#timeline-row{
+		clear:both;
+		line-height: 48px;
+		font-size: 22px;
+		padding-top: 40px;
+	}
+	#timeline-row ul{
+		padding:0;
+		margin: 0;
+	}
+	#timeline-row ul li{
+		list-style: none;
+		margin-bottom: 20px;
+	}
+	
+	.segue{
+		float:left;
+	}
+	.segue span{
+		display: block;
+		height:48px;
+		padding-left:5px;
+		border-left: 5px solid rgba(255,255,255,0.3);
+	}
+	.timeline{
+		float:left;
+		display:block;
+		width:2000px;
+		margin-bottom: 20px;
+	}
+	#timeline-line-description{
+		float:left;
+		width:40px;
+	}
+	#timeline-line-description li{
+		background:rgba(0,0,0,0.4);
+		text-align:center;
+	}
+	#timeline-container{
+		overflow-x:scroll;
+		overflow-y:hidden;
+		width:62%;
+		margin-right:4%;
+		float:left;
+	}
+
+
+
+	.source-line{
+		width:100%;
+		padding: 0 10px;
+		background: rgba(0,0,0,0.4);
+		line-height:50px;
+	}
+	.source-line span{
+		float:right;
+	}
+	.source-line h3{
+		font-size: 1.1em;
+	}
+	.source-line select{
+		height:50px;
+		font-size: 1.1em;
+		background:none;
+		margin: 0;
+		color:white;
+		border:none;
+		font-weight: bold;
+		font-family:verdana;
+		margin-left: -2px;
+	}
+	.source-line select option{
+		font-size: 1.1em;
+		font-weight: bold;
+	}
+
+
+	</style>
 	</head>
 	<body>
-		<div class="container">
-			<div class="row">
-				<!-- Maybe it should just be a number of sources! LOL :D -->
-				<div class="col-md-6">
-					<h3 class="text-center">Slide source</h3>
-					<select class="form-control">
-						<option>SlideShare.net</option>
-						<option>Prezi.com</option>
-					</select>
-					<div class="form-group">
-						<label for="inputEmail3" class="col-md-2 control-label">Email</label>
-						<div class="col-md-10">
-							<input type="email" class="form-control" id="inputEmail3" placeholder="Link">
-						</div>
-					</div>
-				</div>
-				<div class="col-md-6">
-					<h3 class="text-center">Video or audio source</h3>
-					<select class="form-control">
-						<option>YouTube.com</option>
-						<option>Vimeo.com</option>
-					</select>
-				</div>
+		<h1>Awesome presentation title</h1>
+		<div id="preview-container">
+			<div class="preview">
+				<h2 style="background:hsl(195,100%,40%);"><span class="viewport">A</span><span class="source">YT - Teori</span></h2>
+				<div class="media"></div>
 			</div>
-			<div class="row">
-				<div class="col-md-12">
-					<button type="button" class="btn btn-lg btn-primary col-md-12">I've added the sources, GO!</button>
+			<div class="preview">
+				<h2 style="background:hsl(32,100%,50%);"><span class="viewport">B</span><span class="source">SL - Teori</span></h2>
+				<div class="media"></div>
+			</div>
+		</div>
+
+		<div id="sources-container">
+			<div class="source-line">
+				<h2>Sources<span>0:02 / 15:21</span></h2>
+			</div>
+			<div class="source-line" style="background:hsl(195,100%,40%);"><h3>YT - Teori<span>0:02</span></h3></div>
+			<div class="source-line" style="background:hsl(280, 75%,40%);"><h3>YT - Lsnings gennemgang</h3></div>
+			<div class="source-line" style="background:hsl( 80,100%,30%);"><h3>YT - Rette kode</h3></div>
+			<div class="source-line" style="background:hsl( 32,100%,50%);"><h3>SL - Teori<span>slide 0</span></h3></div>
+			<div class="source-line" style="background:hsl(  0,100%,40%);"><h3>SL - Forklaring</h3></div>
+			<div class="source-line" style="text-align:center;">Add more</div>
+		</div>
+
+		<div id="timeline-row">
+			<ul id="timeline-line-description">
+				<li>A</li>
+				<li>B</li>
+			</ul>
+			<div id="timeline-container">
+				<div class="seeker">
+				</div>
+				<div class="timeline">
+				   <div class="segue segue-position" style="width:120px;background:hsl(195,100%,40%);"><span>0:20</span></div>
+					<div class="segue segue-position" style="width:100px;background:hsl(80,100%,30%);"><span>0:00</span></div>
+					<div class="segue segue-position" style="width:300px;background:hsl(280,75%,40%);"><span>0:30</span></div>
+				</div>
+				<div class="timeline">
+					<div class="segue segue-position" style="width:40px;background:hsl( 32,100%,50%);"><span>0</span></div>
+					<div class="segue segue-position" style="width:20px;background:hsl( 32,100%,50%);"><span>1</span></div>
+					<div class="segue segue-position" style="width:20px;background:hsl( 32,100%,50%);"><span>2</span></div>
+					<div class="segue segue-position" style="width:44px;background:hsl( 32,100%,50%);"><span>3</span></div>
+					<div class="segue segue-clear" style="width:40px;background:rgba(0,0,0,0.4);"><span>&nbsp;</span></div>
+					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>2</span></div>
+					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>3</span></div>
+					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>4</span></div>
+					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span style="border-color:white;">5</span></div>
+					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>6</span></div>
 				</div>
 			</div>
 		</div>
+
+		<div id="sources-container">
+
+			<div class="source-line">
+				<h2>Edit point<span>11:36</span></h2>
+			</div>
+			<div class="source-line" style="background:hsl(  0,100%,40%);">
+				<h3>
+					<select>
+						<option style="background:rgba(0,0,0,0.4);"><span style="display:block;height:50px;">Clear</span></option>
+						<option style="background:hsl(195,100%,40%);">YT - Teori</option>
+						<option style="background:hsl(280, 75%,40%);">YT - Lsnings gennemgang</option>
+						<option style="background:hsl( 80,100%,30%);">YT - Rette kode</option>
+						<option style="background:hsl( 32,100%,50%);">SL - Teori</option>
+						<option selected style="background:hsl(  0,100%,40%);">SL - Forklaring</option>
+					</select>
+					<span>goto slide 5 in B</span>
+				</h3>
+			</div>
+			<div class="source-line" style="height:30px;">&nbsp;</div>
+			<div class="source-line" style="background:hsl(280, 75%,40%);"><h3>YT - Lsnings gennemgang<span>is at 05:35 in A</span></h3></div>
+			<div class="source-line" style="background:hsl(195,100%,40%);"><h3>YT - Teori</h3></div>
+			<div class="source-line" style="background:hsl( 80,100%,30%);"><h3>YT - Rette kode</h3></div>
+			<div class="source-line" style="background:hsl( 32,100%,50%);"><h3>SL - Teori</h3></div>
+
+		</div>
+
 	</body>
 </html>

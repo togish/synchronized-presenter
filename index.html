@@ -44,9 +44,14 @@
 								url: "https://www.youtube.com/watch?v=pHvP71rwYAc"
 							},
 							events: [
-								{
+								{ // Play from start.
 									offset: 0,
-									position: 0,
+									seek: 0,
+									play: true
+								},
+								{ // Pause 20 seconds in
+									offset: 20,
+									play: false,
 								}
 							]
 						},
