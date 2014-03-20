@@ -25,6 +25,11 @@
 		line-height: 40px;
 	}
 
+	img{
+		max-height: 100%;
+		max-width: 100%;
+	}
+
 	::-webkit-scrollbar {
 		height: 25px;
 		background-color: rgba(0, 0, 0, 0.2);
@@ -70,6 +75,11 @@
 		line-height: 50px;
 		margin-top:40px;
 		background: rgba(0,0,0,0.4);
+	}
+
+
+	.block-viewports{
+
 	}
 
 

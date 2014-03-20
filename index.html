@@ -61,11 +61,7 @@
 					// Do only use this for the timestamp update
 				}, false);
 
-
-				if(!pres.loadAuto()){
-					alert("could not load presentation");
-				}
-
+				pres.loadAuto();
 			}
 
 			// Listen for events from elements in ui.
@@ -74,20 +70,13 @@
 			// Listen for events on the pres obj
 		</script>
 		<style>
-			#viewport-container div, #viewport-container iframe{
+			#viewport-container div.wrap{
 				float:left;
-				width:960px;
+				width:50%;
 				height:540px;
 			}
 
-			body{
-				margin:0;
-				background:#DDD;
-			}
-			img{
-				max-height: 100%;
-				max-width: 100%;
-			}
+
 
 			.progress{
 				overflow: hidden;
@@ -112,6 +101,9 @@
 				float: right;
 			}
 			
+
+
+
 			.control-bar{
 				clear:both;
 				background:#051d31;
@@ -197,6 +189,7 @@
 			}
 
 		</style>
+		<link rel="stylesheet" href="public/css/style.css">
 		<!-- 
 			Loading the youtube js api
 			https://developers.google.com/youtube/js_api_reference
