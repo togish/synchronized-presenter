@@ -20,9 +20,6 @@ var Data = function (loadTarget) {
 	var presentation = loadTarget.presentation != undefined ? loadTarget.presentation : {};
 	var _done = function(){};
 
-	// Dropbox.isBrowserSupported()
-
-
 	// Builds the presentation object from a text string
 	var _buildPresentation = function(presentationText){
 		var ps = JSON.parse(presentationText);
@@ -124,6 +121,7 @@ var Data = function (loadTarget) {
 		dialog.className = "dialog";
 		dialog.innerHTML = "<h1>Save presentation</h1>";
 
+		var sinks = [];
 
 		// Building buttons for save actions
 		var btnFile = document.createElement("button");
@@ -133,19 +131,20 @@ var Data = function (loadTarget) {
 			var blob = new Blob([pres], {type: "text/json;charset=utf-8"});
 			saveAs(blob, filename);
 		});
+		sinks.push({
+			text: "File:",
+			button: btnFile 
+		});
 
-		var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(pres), filename);
 
-		var sinks = [
-			{
-				text: "File:",
-				button: btnFile 
-			},
-			{
+		// Building save to dropbox shit
+		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
+			var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(pres), filename);
+			sinks.push({
 				text: "Dropbox:",
 				button: btnDropbox
-			}
-		];
+			});
+		}
 
 
 		// Generating destination table
@@ -197,6 +196,8 @@ var Data = function (loadTarget) {
 		dialog.className = "dialog";
 		dialog.innerHTML = "<h1>Load presentation</h1>";
 
+		var sinks = [];
+
 		// Building buttons for save actions
 		var btnFile = document.createElement("input");
 		btnFile.type = 'file';
@@ -209,26 +210,25 @@ var Data = function (loadTarget) {
 			};
 			reader.readAsText(file);
 		}, false);
-
-		var btnDropbox = Dropbox.createChooseButton({
-			success: function(files) {
-				_this.load(files[0].link);
-			},
-			linkType: "direct",
-			multiselect: false,
-			// extensions: ['.pdf', '.doc', '.docx'],
+		sinks.push({
+			text: "File:",
+			button: btnFile 
 		});
 
-		var sinks = [
-			{
-				text: "File:",
-				button: btnFile 
-			},
-			{
+		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
+			var btnDropbox = Dropbox.createChooseButton({
+				success: function(files) {
+					_this.load(files[0].link);
+				},
+				linkType: "direct",
+				multiselect: false,
+				// extensions: ['.pdf', '.doc', '.docx'],
+			});
+			sinks.push({
 				text: "Dropbox:",
 				button: btnDropbox
-			}
-		];
+			});
+		}
 
 		// Generating destination table
 		var table = document.createElement("table");
