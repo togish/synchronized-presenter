@@ -132,6 +132,7 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 
 		// Pause the presentations
 		_this.presentation.sources.forEach(function(source){
+			if(typeof source.handlers == "undefined") return;
 			source.handlers.forEach(function(handler){
 				handler.pause();
 			});
@@ -251,11 +252,11 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 		} else if(UrlParams.url != undefined){
 			data.load(UrlParams.url);
 		} else {
+			data.loadDialog();
 			return false;
 		}
 		return true;
 	};
-
 
 	/*
 	 * Loads the presentation in the parameter into the presenter
@@ -272,6 +273,9 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 			viewport.segues.forEach(function(segue, segueIdx){
 				// Gets a reference to the source object
 				var source = _this.presentation.sources[segue.source];
+
+				// Skip if source not avaliable or not needed
+				if(typeof source == "undefined" || segue.type == "clear") return;
 
 				// Ensures that the handlers array exists
 				if(typeof source.handlers == "undefined") source.handlers = [];
