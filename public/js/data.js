@@ -10,11 +10,14 @@
 
 /**
  * Sets up the child elements
+ * Param load target 
+ * 		- must implement load(presentation) 
+ *		- and expose the presentation at obj.presentation
  */
-var Data = function (builder) {
+var Data = function (loadTarget) {
 	var _this = this;
 	var _basePath = "http://bachelor.dev/";
-	var presentation = builder.presentation != undefined ? builder.presentation : {};
+	var presentation = loadTarget.presentation != undefined ? loadTarget.presentation : {};
 	var _done = function(){};
 
 	// Dropbox.isBrowserSupported()
@@ -30,7 +33,7 @@ var Data = function (builder) {
 		});
 
 		_done();
-		builder.load(ps);
+		loadTarget.load(ps);
 	};
 
 	// Clean presentation returns a clean instance of a presentation
