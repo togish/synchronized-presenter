@@ -5,7 +5,6 @@
 /* global Event: false */
 /* global console: false */
 
-
 var Presentation = function (containerElement) { // TODO Add options, maybe!
 	// When the presentation or child player have had an error stopping the execution!
 	this.ERROR = "error";
@@ -80,27 +79,35 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 		// Register the newest start time
 		_lastStart = new Date().getTime();
 		
-		_this.presentation.sources.forEach(function(resource){
+		_this.presentation.viewports.forEach(function(viewport, viewportIdx){
 			var smallestNegative = {};
 
-			resource.events.forEach(function(ev){
-				var delay = ev.offset-_position;
+			viewport.segues.forEach(function(sg){
+				var delay = sg.offset-_position;
 				if (0 <= delay){
 					var timer = setTimeout(function(){
-						resource.handler.seek(ev.position);
-						resource.handler.play();
+						var handler = _this.presentation.sources[sg.source].handlers[viewportIdx];
+
+						// TODO Hide and pause all other sources for this viewport
+
+						handler.seek(sg.value);
+						handler.play();
+						viewport.lastSegue = sg;
 					}, delay*1000);
 					_timers.push(timer);
 				} else if(smallestNegative.delay === undefined || smallestNegative.delay <= delay) {
-					smallestNegative = {delay:delay,position:ev.position};
+					smallestNegative = {delay:delay,segue:sg};
 				}
 			});
+
+			// Used when paused and starts again.
 			if(smallestNegative.delay !== undefined){
-				if(resource.handler.hasTimestamp()){
-					smallestNegative.position += _position;
+				var handler = _this.presentation.sources[smallestNegative.segue.source].handlers[viewportIdx];
+				if(handler.hasTimestamp()){
+					smallestNegative.segue.position += _position;
 				}
-				resource.handler.seek(smallestNegative.position);
-				resource.handler.play();
+				handler.seek(smallestNegative.segue.position);
+				handler.play();
 			}
 		});
 
@@ -124,8 +131,10 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 		_position = this.getPosition();
 
 		// Pause the presentations
-		presentation.sources.forEach(function(resource){
-			resource.handler.pause();
+		_this.presentation.sources.forEach(function(source){
+			source.handlers.forEach(function(handler){
+				handler.pause();
+			});
 		});
 
 		updateStatus();
@@ -141,6 +150,13 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 	var updateDuration = function() {
 		// Run through all of the 
 		var bef = _duration;
+		_duration = 500;
+
+
+		// Take the last segue in each of the viewports
+		// Calculate the latest point bases
+		
+		/*
 		_this.presentation.sources.forEach(function(resource){
 			var handler = resource.handler;
 			// Skips if no duration avaliable
@@ -151,10 +167,10 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 			if(resourceDuration < 0) return;
 
 			// event from resource withthe largest offset.
-			var latestEvent = resource.events.reduce(function(previous,current){
-				if(previous.offset < current.offset) return current;
-				return previous;
-			},{offset:-1});
+			// var latestEvent = resource.events.reduce(function(previous,current){
+				// if(previous.offset < current.offset) return current;
+				// return previous;
+			// },{offset:-1});
 
 			// Checks if a last event was found.
 			// TODO Figure out if this will ever happen, if events has elements.
@@ -166,12 +182,13 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 			}
 		});
 		if(bef != _duration) containerElement.dispatchEvent(new Event(_this.EVENT_DURATION, {bubbles:true,cancelable:true}));
+		*/
 	};
 
 	// Updates the status of the presentation. Lowest status child decides.
 	var updateStatus = function () {
-		var statusNew = _this.presentation.sources.reduce(function(previous, resource){
-			var current = resource.handler;
+		var statusNew = _this.presentation.viewports.reduce(function(previous, viewport, viewportIdx){
+			var current = _this.presentation.sources[viewport.lastSegue.source].handlers[viewportIdx];
 			// TODO Ignore if not in the time scope.
 			// return previous;
 
@@ -224,8 +241,10 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 
 	};
 
+	/*
+	 * Tries to load the presentation based on the information in the url
+	 */
 	this.loadAuto = function() {
-		// TODO Extract the presentation from the url
 		var data = new Data(_this);
 		if(UrlParams.b64zip != undefined){
 			data.fromB64zip(UrlParams.b64zip);
@@ -238,26 +257,55 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 	};
 
 
+	/*
+	 * Loads the presentation in the parameter into the presenter
+	 */
 	this.load = function(presentation) {
+		// TODO Clear the html for rebuilding? Might be a good idea! LOL!
 		_this.presentation = presentation;
 
 		// Adding the resource handler to the presentation object
-		_this.presentation.sources.forEach(function(resource){
-			var viewport = document.createElement("div");
-			// if (options.viewportClass != undefined) viewport.classList.add(options.viewportClass);
-			containerElement.appendChild(viewport);
-	
-			if(resource.type == "slideshare"){
-				resource.handler = new SlideSharePlayer(resource, viewport, childCallback);
-			} else if(resource.type == "youtube"){
-				resource.handler = new YouTubePlayer(resource, viewport, childCallback);
-			} else {
-				viewport.remove();
-			}
+		_this.presentation.viewports.forEach(function(viewport, viewportIdx){
+			var viewportElement = document.createElement("div"); 
+
+			// Generated handlers for each source per viewport. Allowing same source in multiple viewports simultaneously.
+			viewport.segues.forEach(function(segue, segueIdx){
+				// Gets a reference to the source object
+				var source = _this.presentation.sources[segue.source];
+
+				// Ensures that the handlers array exists
+				if(typeof source.handlers == "undefined") source.handlers = [];
+
+				// Sets the last shown segue to the first segue in the row
+				if(typeof viewport.lastSegue == "undefined") viewport.lastSegue = segue;
+				
+				// Returns if generated
+				if(typeof source.handlers[viewportIdx] != "undefined") return;
+
+				var sourceElement = document.createElement("div");
+				viewportElement.appendChild(sourceElement);
+				// if (options.viewportClass != undefined) viewport.classList.add(options.viewportClass);
+		
+				if(source.type == "slideshare"){
+					source.handlers[viewportIdx] = new SlideSharePlayer(source, sourceElement, childCallback);
+				} else if(source.type == "youtube"){
+					source.handlers[viewportIdx] = new YouTubePlayer(source, sourceElement, childCallback);
+				} else {
+					sourceElement.remove();
+					return;
+				}
+
+				// TODO Hide the source html element. Might be needed to do this post initialization of content.
+			});
+
+			containerElement.appendChild(viewportElement);
 		});
 
-		_this.presentation.sources.forEach(function(resource){
-			resource.handler.init();
+		_this.presentation.sources.forEach(function(source){
+			if(typeof source.handlers == "undefined") return;
+			source.handlers.forEach(function(handler){
+				handler.init();
+			});
 		});
 	};
 
