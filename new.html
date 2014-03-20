@@ -1,22 +1,142 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-<!--
-Script features:
-- Listen for changes on the source type selector. Update the ui in association to that.
-- Listen for click on GO GO button. Load information. Send shit to the server making it persistent and redirect to the repsonded presentation id.
-- Detect selected type and load information into javascript structure
-- Validate javascript structure.
-- Listen for key up and run validation.
--->
-	<style>
+		<!--script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.10.2/dropbox.min.js"></script-->
+		<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="aml20xwyo8s4qep"></script>
 
-/* hsl(0-360,85%,55%) */
+		<script type="text/javascript" src="/public/lib/FileSaver.js"></script>	
+		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>	
+
+		<script type="text/javascript" src="/public/js/helpers.js"></script>	
+		<script type="text/javascript" src="/public/js/data.js"></script>	
+		<script type="text/javascript" src="/public/js/builder.js"></script>	
+		<script type="text/javascript" src="/public/js/sources.js"></script>	
+		<script type="text/javascript" src="/public/js/timeline.js"></script>	
+		<script type="text/javascript" src="/public/js/segue.js"></script>	
+		<script type="text/javascript">
+		var presentation = {
+			info: {
+				name: "Awesomo 4000 HORSE"
+			},
+			// comment: {
+			//	commentHashtag: "",
+			//	sources: ["twitter", "instagram"],
+			// },
+			sources: [
+				{
+					type: "youtube",
+					title: "YT - Explanation told by lolmain",
+					timed: true,
+					color: "hsl(32,100%,50%)",
+					length: 320,
+					data: {
+						url: "https://www.youtube.com/watch?v=pHvP71rwYAc"
+					}
+				},
+				{
+					type: "slideshare",
+					title: "SL - Explanation",
+					timed: false,
+					color: "hsl(195,100%,40%)",
+					length: 9,
+					data: {
+						url: "http://www.slideshare.net/tor2608/presentation-for-syncronization-test"
+					}
+				},
+				{
+					type: "slideshare",
+					title: "SL - Correct code",
+					timed: false,
+					color: "hsl( 80,100%,30%)",
+					length: 3,
+					data: {
+						url: "http://www.slideshare.net/tor2608/presentation-for-syncronization-test"
+					}
+				}
+
+				
+			],
+			viewports:[
+				{
+					lastSegue: {},
+					segues: [
+						{
+							offset: 0,     	// Absolute offset in seconds
+							action: "playfrom",
+							value: 0,		// if seek : Seeks to position
+											// if play : starts playback
+											// if pause : pauses playback
+											// if clear : viewport is cleared
+							source: 0		// points to the resource. not used for clear
+						},
+						{
+							offset: 50,     	// Absolute offset in seconds
+							action: "playfrom",
+							value: 100,		// if seek : Seeks to position
+											// if play : starts playback
+											// if pause : pauses playback
+											// if clear : viewport is cleared
+							source: 0		// points to the resource. not used for clear
+						},
+//						{
+//							offset: 190,
+//							action: "clear",
+//						}
+						// TODO Add stop or pause marker
+					]
+				},
+				{
+					lastSegue: {},
+					segues: [
+						{
+							offset: 0,     	// Absolute offset in seconds
+							action: "playfrom",
+							value: 0,		// if seek : Seeks to position
+											// if play : starts playback
+											// if pause : pauses playback
+											// if clear : viewport is cleared
+							source: 1		// points to the resource. not used for clear
+						},
+						{
+							offset: 20,
+							action: "playfrom",
+							value: 1,
+							source: 1
+						},
+						{
+							offset: 55,
+							action: "playfrom",
+							value: 2,
+							source: 1
+						},
+						{
+							offset: 70,
+							action: "playfrom",
+							value: 3,
+							source: 1
+						}
+					]
+				}
+			],
+		};
+
+		function pageLoaded(){
+			var builder = new Builder(document.body);
+			if(!builder.loadAuto()){
+				builder.load(presentation);
+			}
+		};
+		</script>
+
+		<style>
+
+	/* hsl(0-360,85%,55%) */
 	body{
 		background: hsl(280,50%,22%);
 		color:white;
 		font-family:verdana;
-		padding: 0 50px;
+		padding: 0 50px 50px 50px;
+		margin-bottom: 550px;
 	}
 
 	h1, h2, h3, h4, h5, h6{
@@ -27,32 +147,230 @@ Script features:
 		margin-bottom: 20px;
 	}
 
-
-	#preview-container{
-		float:left;
-		width:68%;
+	h2{
+		font-size: 20px;
+		line-height: 40px;
 	}
-	#preview-container .preview{
+
+	h3{
+		font-size: 16px;
+		line-height: 40px;
+	}
+
+	::-webkit-scrollbar {
+		height: 25px;
+		background-color: rgba(0, 0, 0, 0.2);
+	}
+ 
+	::-webkit-scrollbar-thumb {
+		margin-top:5px;
+		background-color: rgba(0, 0, 0, 0.2);
+
+	}
+ 
+	::-webkit-scrollbar-button {
+		display: none;
+	}
+
+	/*  GENERAL BLOCK ELEMENTS POSITION */
+	.block-preview{
+		clear:both;
+		float: left;
+		width:70%;
+	}
+
+	.block-sources{
+		float: left;
+		width:28%;
+		background: rgba(0,0,0,0.4);
+		margin-left: 2%;
+	}
+
+	.block-timeline{
+		clear:both;
+		float: left;
+		width:100%;
+		font-size: 22px;
+		line-height: 40px;
+		margin-top:40px;
+	}
+
+	.block-segue{
+		float: left;
+		width:30%;
+		font-size: 22px;
+		line-height: 50px;
+		margin-top:40px;
+		background: rgba(0,0,0,0.4);
+	}
+
+
+
+	/* block source additions */
+	.block-sources span{
+		float: right;
+	}
+	.block-sources span.viewport{
+		float: none;
+		padding:10px 15px;
+		background: rgba(255,255,255,0.3);
+		display: inline-block;
+		padding: 0 15px;
+		margin-left: 15px;
+	}
+	.block-sources h3{
+		clear:both;
+	}
+	.block-sources h3.inactive span{
+		display:none;
+	}
+	.block-sources h3 span.drag{
+		display: inline-block;
+		width:40px;
+		float:left;
+		text-align: center;
+		cursor: move;
+	}
+
+	/* block segue additions */
+	.block-segue{
+		font-size:16px;
+	}
+	.block-segue span{
+		float: right;
+	}
+	.block-segue table{
+		clear:both;
+		width: 100%;
+	}
+	.block-segue tr.action td:last-child{
+		text-align: right;
+	}
+	.block-segue input[type=radio] {
+		display: none;
+	}
+	.block-segue input[type=radio] + label {
+		display:inline-block;
+		padding: 0 12px;
+		cursor:pointer;
+	}
+	.block-segue input[type=radio]:checked + label { 
+		background-image: none;
+		background-color: rgba(0,0,0,0.4);
+	}
+
+	/* block timeline add */
+	.block-timeline .timeline-list {
+		float:left;
+		width:4%;
+	}
+	.block-timeline .timeline-list div{
+		margin-bottom: 15px;
+		background:rgba(0,0,0,0.4);
+		text-align:center;
+	}
+	.block-timeline .timeline-container{
+		overflow-x:auto;
+		overflow-y:hidden;
+		width:96%;
+		float:left;
+	}
+	.timeline{
+		float:left;
+		clear: left;
+		display:block;
+		margin-bottom: 15px;
+		background:rgba(0,0,0,0.4);
+		min-width: 100%;
+	}
+	.timeline.over{
+		margin-bottom: 14px;
+		border-bottom: 1px solid white;
+	}
+	.segue{
+		float:left;
+		cursor: pointer;
+	}
+	.segue-clear{
+		height: 40px;
+		border-left:5px solid white;
+	}
+	.segue-clear svg{
+		fill:white;
+
+	}
+	.segue input[type=text]{
+		display: block;
+		height:40px;
+		width: 85%;
+		line-height: 22px;
+		padding:0;
+		margin: 0;
+		padding-left:5px;
+		border:none;
+		border-left:5px solid rgba(255,255,255,0.3);
+		background: none;
+		color:white;
+		font-size: 22px;
+		font-family:verdana;
+		outline: none;
+	}
+
+	.fade{
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background: rgba(0,0,0,0.4);
+		left: 0;
+		top: 0;
+	}
+
+	.dialog{
+		position: absolute;
+		min-width: 100px;
+		min-height: 100px; 
+		background: black;
+		left: 25%;
+		top: 25%;
+		padding:50px;
+	}
+
+	.dialog table{
+		width: 100%;
+
+	}
+
+	.dialog button, .dialog a{
+		float:right;
+	}
+
+
+/*
+	.block-preview .preview{
 		float:left;
 		height:349px;
 		width:560px;
 		margin-right: 30px;
 	}
-	#preview-container .preview h2{
+
+	.block-preview .preview h2{
 		width:100%;
 		margin: 0;
 		float: left;
 		color: white;
 		line-height: 50px;
 	}
-	#preview-container .preview h2 span.viewport{
+
+	.block-preview .preview h2 span.viewport{
 		padding:10px 15px;
 		background: rgba(255,255,255,0.3);
 	}
-	#preview-container .preview h2 span.source{
+	
+	.block-preview .preview h2 span.source{
 		padding:10px;
 	}
-	#preview-container .preview .media{
+	
+	.block-preview .preview .media{
 		width:100%;
 		margin:0;
 		height:300px;
@@ -60,181 +378,12 @@ Script features:
 		background:black;
 		clear:both;
 	}
-	#sources-container{
-		float:left;
-		width:30%;
-		height: 200px;
-	}
-	#sources-container ul{
-		list-style: none;
-		padding:0;
-		margin:0;
-	}
-	#sources-container li{
-		list-style: none;
-		width: 100%;
-		line-height: 45px;
-		padding-left:10px;
-		font-size: 20px;
-	}
-
-	#timeline-row{
-		clear:both;
-		line-height: 48px;
-		font-size: 22px;
-		padding-top: 40px;
-	}
-	#timeline-row ul{
-		padding:0;
-		margin: 0;
-	}
-	#timeline-row ul li{
-		list-style: none;
-		margin-bottom: 20px;
-	}
-	
-	.segue{
-		float:left;
-	}
-	.segue span{
-		display: block;
-		height:48px;
-		padding-left:5px;
-		border-left: 5px solid rgba(255,255,255,0.3);
-	}
-	.timeline{
-		float:left;
-		display:block;
-		width:2000px;
-		margin-bottom: 20px;
-	}
-	#timeline-line-description{
-		float:left;
-		width:40px;
-	}
-	#timeline-line-description li{
-		background:rgba(0,0,0,0.4);
-		text-align:center;
-	}
-	#timeline-container{
-		overflow-x:scroll;
-		overflow-y:hidden;
-		width:62%;
-		margin-right:4%;
-		float:left;
-	}
+*/
 
 
 
-	.source-line{
-		width:100%;
-		padding: 0 10px;
-		background: rgba(0,0,0,0.4);
-		line-height:50px;
-	}
-	.source-line span{
-		float:right;
-	}
-	.source-line h3{
-		font-size: 1.1em;
-	}
-	.source-line select{
-		height:50px;
-		font-size: 1.1em;
-		background:none;
-		margin: 0;
-		color:white;
-		border:none;
-		font-weight: bold;
-		font-family:verdana;
-		margin-left: -2px;
-	}
-	.source-line select option{
-		font-size: 1.1em;
-		font-weight: bold;
-	}
-
-
-	</style>
+		</style>
 	</head>
-	<body>
-		<h1>Awesome presentation title</h1>
-		<div id="preview-container">
-			<div class="preview">
-				<h2 style="background:hsl(195,100%,40%);"><span class="viewport">A</span><span class="source">YT - Teori</span></h2>
-				<div class="media"></div>
-			</div>
-			<div class="preview">
-				<h2 style="background:hsl(32,100%,50%);"><span class="viewport">B</span><span class="source">SL - Teori</span></h2>
-				<div class="media"></div>
-			</div>
-		</div>
-
-		<div id="sources-container">
-			<div class="source-line">
-				<h2>Sources<span>0:02 / 15:21</span></h2>
-			</div>
-			<div class="source-line" style="background:hsl(195,100%,40%);"><h3>YT - Teori<span>0:02</span></h3></div>
-			<div class="source-line" style="background:hsl(280, 75%,40%);"><h3>YT - Lsnings gennemgang</h3></div>
-			<div class="source-line" style="background:hsl( 80,100%,30%);"><h3>YT - Rette kode</h3></div>
-			<div class="source-line" style="background:hsl( 32,100%,50%);"><h3>SL - Teori<span>slide 0</span></h3></div>
-			<div class="source-line" style="background:hsl(  0,100%,40%);"><h3>SL - Forklaring</h3></div>
-			<div class="source-line" style="text-align:center;">Add more</div>
-		</div>
-
-		<div id="timeline-row">
-			<ul id="timeline-line-description">
-				<li>A</li>
-				<li>B</li>
-			</ul>
-			<div id="timeline-container">
-				<div class="seeker">
-				</div>
-				<div class="timeline">
-				   <div class="segue segue-position" style="width:120px;background:hsl(195,100%,40%);"><span>0:20</span></div>
-					<div class="segue segue-position" style="width:100px;background:hsl(80,100%,30%);"><span>0:00</span></div>
-					<div class="segue segue-position" style="width:300px;background:hsl(280,75%,40%);"><span>0:30</span></div>
-				</div>
-				<div class="timeline">
-					<div class="segue segue-position" style="width:40px;background:hsl( 32,100%,50%);"><span>0</span></div>
-					<div class="segue segue-position" style="width:20px;background:hsl( 32,100%,50%);"><span>1</span></div>
-					<div class="segue segue-position" style="width:20px;background:hsl( 32,100%,50%);"><span>2</span></div>
-					<div class="segue segue-position" style="width:44px;background:hsl( 32,100%,50%);"><span>3</span></div>
-					<div class="segue segue-clear" style="width:40px;background:rgba(0,0,0,0.4);"><span>&nbsp;</span></div>
-					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>2</span></div>
-					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>3</span></div>
-					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>4</span></div>
-					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span style="border-color:white;">5</span></div>
-					<div class="segue segue-position" style="width:60px;background:hsl(  0,100%,40%);"><span>6</span></div>
-				</div>
-			</div>
-		</div>
-
-		<div id="sources-container">
-
-			<div class="source-line">
-				<h2>Edit point<span>11:36</span></h2>
-			</div>
-			<div class="source-line" style="background:hsl(  0,100%,40%);">
-				<h3>
-					<select>
-						<option style="background:rgba(0,0,0,0.4);"><span style="display:block;height:50px;">Clear</span></option>
-						<option style="background:hsl(195,100%,40%);">YT - Teori</option>
-						<option style="background:hsl(280, 75%,40%);">YT - Lsnings gennemgang</option>
-						<option style="background:hsl( 80,100%,30%);">YT - Rette kode</option>
-						<option style="background:hsl( 32,100%,50%);">SL - Teori</option>
-						<option selected style="background:hsl(  0,100%,40%);">SL - Forklaring</option>
-					</select>
-					<span>goto slide 5 in B</span>
-				</h3>
-			</div>
-			<div class="source-line" style="height:30px;">&nbsp;</div>
-			<div class="source-line" style="background:hsl(280, 75%,40%);"><h3>YT - Lsnings gennemgang<span>is at 05:35 in A</span></h3></div>
-			<div class="source-line" style="background:hsl(195,100%,40%);"><h3>YT - Teori</h3></div>
-			<div class="source-line" style="background:hsl( 80,100%,30%);"><h3>YT - Rette kode</h3></div>
-			<div class="source-line" style="background:hsl( 32,100%,50%);"><h3>SL - Teori</h3></div>
-
-		</div>
-
+	<body onload="pageLoaded();">
 	</body>
 </html>

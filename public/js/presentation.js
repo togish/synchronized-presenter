@@ -4,7 +4,9 @@
 /* global YouTubePlayer: false */
 /* global Event: false */
 /* global console: false */
-var Presentation = function (presentation, containerElement) { // TODO Add options, maybe!
+
+
+var Presentation = function (containerElement) { // TODO Add options, maybe!
 	// When the presentation or child player have had an error stopping the execution!
 	this.ERROR = "error";
 
@@ -36,6 +38,7 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 	this.addEventListener = function (a,b,c) {containerElement.addEventListener(a,b,c);};
 	this.dispatchEvent = function(a){containerElement.addEventListener(a);};
 	this.removeEventListener = function(a,b,c){containerElement.removeEventListener(a,b,c);};
+	this.presentation = {};
 
 
 	// Returns the over all duration of the presentation, in seconds.
@@ -77,7 +80,7 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 		// Register the newest start time
 		_lastStart = new Date().getTime();
 		
-		presentation.resources.forEach(function(resource){
+		_this.presentation.sources.forEach(function(resource){
 			var smallestNegative = {};
 
 			resource.events.forEach(function(ev){
@@ -121,7 +124,7 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 		_position = this.getPosition();
 
 		// Pause the presentations
-		presentation.resources.forEach(function(resource){
+		presentation.sources.forEach(function(resource){
 			resource.handler.pause();
 		});
 
@@ -138,7 +141,7 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 	var updateDuration = function() {
 		// Run through all of the 
 		var bef = _duration;
-		presentation.resources.forEach(function(resource){
+		_this.presentation.sources.forEach(function(resource){
 			var handler = resource.handler;
 			// Skips if no duration avaliable
 			if(handler.getStatus() != handler.READY && handler.getStatus() != handler.PLAYING) return;
@@ -167,7 +170,7 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 
 	// Updates the status of the presentation. Lowest status child decides.
 	var updateStatus = function () {
-		var statusNew = presentation.resources.reduce(function(previous, resource){
+		var statusNew = _this.presentation.sources.reduce(function(previous, resource){
 			var current = resource.handler;
 			// TODO Ignore if not in the time scope.
 			// return previous;
@@ -221,24 +224,41 @@ var Presentation = function (presentation, containerElement) { // TODO Add optio
 
 	};
 
-	this.init = function() {
-		presentation.resources.forEach(function(resource){
+	this.loadAuto = function() {
+		// TODO Extract the presentation from the url
+		var data = new Data(_this);
+		if(UrlParams.b64zip != undefined){
+			data.fromB64zip(UrlParams.b64zip);
+		} else if(UrlParams.url != undefined){
+			data.load(UrlParams.url);
+		} else {
+			return false;
+		}
+		return true;
+	};
+
+
+	this.load = function(presentation) {
+		_this.presentation = presentation;
+
+		// Adding the resource handler to the presentation object
+		_this.presentation.sources.forEach(function(resource){
+			var viewport = document.createElement("div");
+			// if (options.viewportClass != undefined) viewport.classList.add(options.viewportClass);
+			containerElement.appendChild(viewport);
+	
+			if(resource.type == "slideshare"){
+				resource.handler = new SlideSharePlayer(resource, viewport, childCallback);
+			} else if(resource.type == "youtube"){
+				resource.handler = new YouTubePlayer(resource, viewport, childCallback);
+			} else {
+				viewport.remove();
+			}
+		});
+
+		_this.presentation.sources.forEach(function(resource){
 			resource.handler.init();
 		});
 	};
 
-	// Adding the resource handler to the presentation object
-	presentation.resources.forEach(function(resource){
-		var viewport = document.createElement("div");
-		// if (options.viewportClass != undefined) viewport.classList.add(options.viewportClass);
-		containerElement.appendChild(viewport);
-
-		if(resource.type == "slideshare"){
-			resource.handler = new SlideSharePlayer(resource, viewport, childCallback);
-		} else if(resource.type == "youtube"){
-			resource.handler = new YouTubePlayer(resource, viewport, childCallback);
-		} else {
-			viewport.remove();
-		}
-	});
 };

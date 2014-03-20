@@ -4,10 +4,16 @@
 		<!--link rel="stylesheet" href="/public/dist/css/bootstrap.css">
 		<link rel="stylesheet" href="/public/dist/css/bootstrap-theme.css"-->
 		<!-- script type="text/javascript" src="/public/dist/js/bootstrap.js"></script -->
+		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>	
+
 		<script type="text/javascript" src="/public/js/players/youtube.js"></script>	
 		<script type="text/javascript" src="/public/js/players/slideshare.js"></script>	
+		<script type="text/javascript" src="/public/js/helpers.js"></script>	
+		<script type="text/javascript" src="/public/js/data.js"></script>	
 		<script type="text/javascript" src="/public/js/presentation.js"></script>	
+
 		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
+
 		<script type="text/javascript">
 			// Ensureing browser compatibility for older microsoft browsers.
 			if (typeof XMLHttpRequest === "undefined") {
@@ -29,6 +35,7 @@
 			var pres;
 			var ease;
 			function pageLoaded(){
+				/*
 				var presentation = {
 					info: {
 						name: "Awesomo 4000"
@@ -110,9 +117,56 @@
 					]
 				};
 
+				var presentation = {
+					info: {
+						name: "Awesomo 4000"
+					},
+					// comment: {
+					//	commentHashtag: "",
+					//	sources: ["twitter", "instagram"],
+					// },
+					sources: [
+						{
+							type: "youtube",
+							title: "Some youtube shitzz",
+							data: {
+								url: "https://www.youtube.com/watch?v=pHvP71rwYAc"
+							}
+						},
+						{
+							type: "slideshare",
+							title: "Some slideshare slides",
+							data: {
+								url: "http://www.slideshare.net/tor2608/presentation-for-syncronization-test"
+							}
+						}
+					],
+					viewports:[
+						{
+							lastSegue: {}, // This is only used for the builder. Is cleared on goto production
+							segues: [
+								{
+									offset: 0,     	// Absolute offset in seconds
+									action: "play|pause|seek|clear",
+									value: 0,		// if seek : Seeks to position
+													// if play : starts playback
+													// if pause : pauses playback
+													// if clear : viewport is cleared
+									source: 0		// points to the resource. not used for clear
+								},
+								// TODO Add stop or pause marker
+							]
+						}
+					],
+				};
+				*/
+
+
+
+
 				var presele = document.getElementById("viewport-container");
 				var ctrlbar = document.getElementById("control-bar");
-				pres = new Presentation(presentation, presele);
+				pres = new Presentation(presele);
 
 				var pgbar = document.getElementById("presentation-progress");
 				ease = function(to, time){
@@ -149,7 +203,11 @@
 					// Do only use this for the timestamp update
 				}, false);
 
-				pres.init();
+
+				if(!pres.loadAuto()){
+					alert("could not load presentation");
+				}
+
 			}
 
 			// Listen for events from elements in ui.

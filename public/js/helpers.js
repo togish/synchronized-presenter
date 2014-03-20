@@ -1,0 +1,11 @@
+var UrlParams = function () {
+	var query_string = {};
+	var query = window.location.search.substring(1);
+	var vars = query.split("&");
+	for (var i=0;i<vars.length;i++) {
+		var pair = vars[i].split("=");
+		query_string[pair[0]] = pair[1];
+	}
+	return query_string;
+} ();
+
