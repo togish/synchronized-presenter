@@ -9,6 +9,8 @@ var Sources = function (presentation, blockSources) {
 	var _sourcesList = document.createElement('div');
 	blockSources.appendChild(_sourcesList);
 
+	var _clearSource;
+
 
 	// Updated the list of sources
 	this.updateSource = function(){
@@ -17,24 +19,28 @@ var Sources = function (presentation, blockSources) {
 			_sourcesList.removeChild(_sourcesList.firstChild);	
 		}
 
-		presentation.sources.forEach(function(source, index){
+		var addLine = function(title, transferData){
 			var element = document.createElement('h3');
-			element.style.background = source.color;
-			element.innerHTML = '<span class="drag" draggable="true">+</span>'+source.title+'<span>3:25<span class="viewport">A</span></span>';
-
+			element.innerHTML = '<span class="drag" draggable="true">+</span>'+title+'<span>3:25<span class="viewport">A</span></span>';
 			element.addEventListener('dragstart', function(e){
-				//this.style.opacity = '0.4';
 				e.dataTransfer.dropEffect = 'copy';
-				e.dataTransfer.setData("text/plain", index);
+				e.dataTransfer.setData("text/plain", transferData);
 			}, false);
 			element.addEventListener('dragend', function(e){
 				this.style.opacity = '1';
 				e.dataTransfer.dropEffect = 'copy';
 			}, false);
 			_sourcesList.appendChild(element);
-			source.htmlElement = element;
+			return element;
+		};
+
+		presentation.sources.forEach(function(source, index){
+			source.htmlElement = addLine(source.title, index);
+			source.htmlElement.style.background = source.color;
 		});
 
+		_clearSource = addLine("Clear viewport", "clear");
+		_clearSource.classList.add("inactive");
 		// TODO Add click lister?
 	}
 
@@ -52,8 +58,8 @@ var Sources = function (presentation, blockSources) {
 				if (segue != undefined && sourceIndex == segue.source) {
 					// YAY Jackpot baby!
 					source.htmlElement.classList.remove("inactive");
-
-					// TODO Find child node for the viewport and timestamp update those
+				} else if (segue != undefined && segue.type == "clear") {
+					_clearSource.classList.remove("inactive");
 				} else {
 					source.htmlElement.classList.add("inactive");
 				}

@@ -54,26 +54,33 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 			timelineElement.addEventListener('drop', function(e){
 				var poss = Math.round((e.clientX - timelineElement.offsetLeft) * 0.2);
 
-				// TODO If the previous is timed. Make sure not to exed the length of media!
-
 				var lsg = viewport.segues[viewport.segues.length-1];
-				var lsgSource = presentation.sources[lsg.source];
-				var lsgEndPos = lsg.offset + (lsgSource.length - lsg.value);
+				var preClear = typeof lsg.length != "undefined";
+				
+				if (preClear) {
+					var lsgSource = presentation.sources[lsg.source];
+					var lsgEndPos = lsg.offset + (lsgSource.length - lsg.value);
+					var preClear = lsgSource.timed && lsgEndPos < poss;
+				};
 
-				if(lsgSource.timed && lsgEndPos < poss){
-					// Insert a clear segue inbetween
+				var transferData = e.dataTransfer.getData("text/plain");
+				
+				if (preClear || transferData == "clear") {
 					viewport.segues.push({
-						offset: lsgEndPos,
-						action: "clear"
+						offset: (preClear ? lsgEndPos : poss),
+						action: "clear",
+					});
+				} 
+
+				if (!isNaN(transferData)) {
+					console.debug(transferSource);
+					viewport.segues.push({
+						offset: poss,
+						action: "play",
+						value: 0,
+						source: parseInt(transferData)
 					});
 				}
-				
-				viewport.segues.push({
-					offset: poss,
-					action: "play",
-					value: 0,
-					source: parseInt(e.dataTransfer.getData("text/plain"))
-				});
 
 				// Order the segues by their offset.
 				viewport.segues.sort(function(a,b){
@@ -114,7 +121,6 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 
 				// Building the html dom element
 				var segueElement = document.createElement('div');
-				// TODO Set html class dependent on the type of the segue
 				segueElement.className ="segue segue-"+segue.action;
 				segueElement.style.width = ''+length*5+'px';
 				if(sgSource == undefined){
