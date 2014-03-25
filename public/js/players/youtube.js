@@ -2,6 +2,34 @@
 /* exported YouTubePlayer */
 /* global YT: false */
 /* global console: false */
+
+var YouTubeHelpers = function(){
+	this.parseUrl = function(url){
+		// Thanks for regex to: http://lasnv.net/foro/839/Javascript_parsear_URL_de_YouTube
+		var match = url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/);
+		// Checks that we got an id
+		if (!(match && match[7].length==11)){
+			return;
+		}
+		return match[7];
+	};
+
+	this.loadMetadata = function(videoId, callback){
+		// Load the metadata about the video in order to get the duration before playback.
+		var req = new XMLHttpRequest();
+		req.onreadystatechange = function() {
+			if (req.readyState === 4){
+				callback(JSON.parse(req.responseText).data);
+			}
+		};
+		req.open('GET', 'http://gdata.youtube.com/feeds/api/videos/' + videoId + '?v=2&alt=jsonc', true);
+		req.send(null);
+	};
+	return this;
+} ();
+
+
+
 var YouTubePlayer = function (resource, targetElement, callback) {
 	// The name of the platform integrated
 	this.TYPE = 'YouTube';
@@ -83,30 +111,16 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 		if(_readyMetadata && _readyVideo) updateStatus(_this.READY);
 	};
 
+
 	this.init = function(){
 		updateStatus(_this.LOADING);
-		// Thanks for regex to: http://lasnv.net/foro/839/Javascript_parsear_URL_de_YouTube
-		var match = resource.data.url.match(/^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#\&\?]*).*/);
-		// Checks that we got an id
-		if (!(match && match[7].length==11)){
-			updateStatus(_this.ERROR);
-			// TODO Send error upstream
-			return;
-		}
-		_videoId = match[7];
+		_videoId = YouTubeHelpers.parseUrl(resource.data.url);
 	
-		// Load the metadata about the video in order to get the duration before playback.
-		var req = new XMLHttpRequest();
-		req.onreadystatechange = function() {
-			if (req.readyState === 4){
-				_duration = JSON.parse(req.responseText).data.duration;
-				_readyMetadata = true;
-				callbackTryReady();
-			}
-			// TODO Catch metadataloading error
-		};
-		req.open('GET', 'http://gdata.youtube.com/feeds/api/videos/' + _videoId + '?v=2&alt=jsonc', true);
-		req.send(null);
+		YouTubeHelpers.loadMetadata(_videoId, function(data){
+			_duration = data.duration;
+			_readyMetadata = true;
+			callbackTryReady();
+		});
 
 		// Construct the player
 		_player = new YT.Player(targetElement, {

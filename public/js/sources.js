@@ -3,6 +3,8 @@
 /* global Event: false */
 /* global console: false */
 var Sources = function (presentation, blockSources) {
+	var _this = this;
+
 	var _sourcesHeader = document.createElement('h2');
 	blockSources.appendChild(_sourcesHeader);
 
@@ -10,6 +12,24 @@ var Sources = function (presentation, blockSources) {
 	blockSources.appendChild(_sourcesList);
 
 	var _clearSource;
+
+	this.addSource = function(url){
+		var youtubeVidId = YouTubeHelpers.parseUrl(url);
+		if(typeof youtubeVidId == "string"){
+			YouTubeHelpers.loadMetadata(youtubeVidId,function(d){
+				presentation.sources.push({
+					type: "youtube",
+					timed: true,
+					data: {
+						url: url
+					},
+					title: d.title,
+					length: d.duration,
+				});
+				_this.updateSource();
+			});
+		}
+	};
 
 
 	// Updated the list of sources
@@ -41,6 +61,20 @@ var Sources = function (presentation, blockSources) {
 
 		_clearSource = addLine("Clear viewport", "clear");
 		_clearSource.classList.add("inactive");
+
+
+		var addSource = document.createElement("h3");
+		var addSourceInp = document.createElement("input");
+		addSourceInp.type = "text";
+		addSourceInp.placeholder = "Add source. Paste link here!";
+		addSourceInp.addEventListener("keyup", function(e){
+			if(e.keyCode == 13){
+				e.preventDefault();
+				_this.addSource(addSourceInp.value);
+			}
+		});
+		addSource.appendChild(addSourceInp);
+		_sourcesList.appendChild(addSource);
 		// TODO Add click lister?
 	}
 

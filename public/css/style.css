@@ -16,6 +16,7 @@
 	}
 
 	h2{
+		padding: 0 10px;
 		font-size: 20px;
 		line-height: 40px;
 	}
@@ -118,6 +119,15 @@
 		float:left;
 		text-align: center;
 		cursor: move;
+	}
+
+	.block-sources input[type=text]{
+		width:94%;
+		border:none;
+		line-height: 40px;
+		margin:0;
+		padding:0 3%;
+
 	}
 
 	/* block segue additions */
