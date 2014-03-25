@@ -1,145 +1,48 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<!--script src="//cdnjs.cloudflare.com/ajax/libs/dropbox.js/0.10.2/dropbox.min.js"></script-->
 		<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="aml20xwyo8s4qep"></script>
+		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
+
+		<script type="text/javascript" src="/public/js/players/slideshare.js"></script>	
+		<script type="text/javascript" src="/public/js/players/youtube.js"></script>
 
 		<script type="text/javascript" src="/public/lib/FileSaver.js"></script>
 		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>
 
 		<script type="text/javascript" src="/public/js/helpers.js"></script>
-		<script type="text/javascript" src="/public/js/players/youtube.js"></script>
 		<script type="text/javascript" src="/public/js/data.js"></script>
 		<script type="text/javascript" src="/public/js/builder.js"></script>
 		<script type="text/javascript" src="/public/js/sources.js"></script>
 		<script type="text/javascript" src="/public/js/timeline.js"></script>
 		<script type="text/javascript" src="/public/js/segue.js"></script>
 		<script type="text/javascript">
-		var presentation = {
-			info: {
-				name: "Awesomo 4000 HORSE"
-			},
-			// comment: {
-			//	commentHashtag: "",
-			//	sources: ["twitter", "instagram"],
-			// },
-			sources: [
-				{
-					type: "youtube",
-					title: "YT - Explanation told by lolmain",
-					timed: true,
-					color: "hsl(32,100%,50%)",
-					length: 320,
-					data: {
-						url: "https://www.youtube.com/watch?v=pHvP71rwYAc"
-					}
-				},
-				{
-					type: "slideshare",
-					title: "SL - Explanation",
-					timed: false,
-					color: "hsl(195,100%,40%)",
-					length: 9,
-					data: {
-						url: "http://www.slideshare.net/tor2608/presentation-for-syncronization-test"
-					}
-				},
-				{
-					type: "slideshare",
-					title: "SL - Correct code",
-					timed: false,
-					color: "hsl( 80,100%,30%)",
-					length: 3,
-					data: {
-						url: "http://www.slideshare.net/tor2608/presentation-for-syncronization-test"
-					}
-				}
 
-				
+// https://www.youtube.com/watch?v=pHvP71rwYAc
+// http://www.slideshare.net/tor2608/presentation-for-syncronization-test
+
+		var emptyPresentation = {
+			info: {
+				name: ""
+			},
+			sources:[
 			],
-			viewports:[
+			viewports: [
 				{
 					lastSegue: {},
-					segues: [
-						{
-							offset: 0,     	// Absolute offset in seconds
-							action: "playfrom",
-							value: 0,		// if seek : Seeks to position
-											// if play : starts playback
-											// if pause : pauses playback
-											// if clear : viewport is cleared
-							source: 0		// points to the resource. not used for clear
-						},
-						// {
-							// offset: 50,     	// Absolute offset in seconds
-							// action: "playfrom",
-							// value: 100,		// if seek : Seeks to position
-							// source: 0		// points to the resource. not used for clear
-						// },
-//						{
-//							offset: 190,
-//							action: "clear",
-//						}
-						// TODO Add stop or pause marker
-					]
+					segues: [],
 				},
 				{
 					lastSegue: {},
-					segues: [
-						{
-							offset: 0,     	// Absolute offset in seconds
-							action: "playfrom",
-							value: 0,		// if seek : Seeks to position
-											// if play : starts playback
-											// if pause : pauses playback
-											// if clear : viewport is cleared
-							source: 1		// points to the resource. not used for clear
-						},
-						{
-							offset: 3,
-							action: "playfrom",
-							value: 1,
-							source: 1
-						},
-						{
-							offset: 7,
-							action: "playfrom",
-							value: 2,
-							source: 1
-						},
-						{
-							offset: 10,
-							action: "playfrom",
-							value: 3,
-							source: 1
-						},
-						{
-							offset: 14,
-							action: "playfrom",
-							value: 4,
-							source: 1
-						},
-						{
-							offset: 18,
-							action: "playfrom",
-							value: 5,
-							source: 1
-						},
-						{
-							offset: 23,
-							action: "playfrom",
-							value: 6,
-							source: 1
-						},
-					]
+					segues: [],
 				}
-			],
+			]
 		};
 
 		function pageLoaded(){
 			var builder = new Builder(document.body);
 			if(!builder.loadAuto()){
-				builder.load(presentation);
+				builder.load(emptyPresentation);
 			}
 		};
 		</script>

@@ -181,6 +181,7 @@
 		margin-bottom: 15px;
 		background:rgba(0,0,0,0.4);
 		min-width: 100%;
+		height:40px;
 	}
 	.timeline.over{
 		margin-bottom: 14px;

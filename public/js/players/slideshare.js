@@ -44,7 +44,7 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 
 	// Returns the length of the player
 	this.getDuration = function(){
-		return -1;
+		return _viewer.length();
 	};
 
 	// Returns the players current status

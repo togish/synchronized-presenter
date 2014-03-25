@@ -2,6 +2,13 @@
 /* exported Presentation */
 /* global Event: false */
 /* global console: false */
+
+
+// hsl(32,100%,50%)
+// hsl(195,100%,40%)
+// hsl( 80,100%,30%)
+
+
 var Sources = function (presentation, blockSources) {
 	var _this = this;
 
@@ -28,6 +35,23 @@ var Sources = function (presentation, blockSources) {
 				});
 				_this.updateSource();
 			});
+		} else if (url.match(/slideshare/i)){
+			var callback = function(){
+				var s = {
+					type: "slideshare",
+					timed: false,
+					data: {
+						url: url
+					},
+					title: slsh.presentation.title,
+					length: slsh.length(),
+				};
+				console.debug(s);
+				presentation.sources.push(s);
+				_this.updateSource();
+			};
+			var slsh = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
+
 		}
 	};
 
