@@ -73,7 +73,6 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 				} 
 
 				if (!isNaN(transferData)) {
-					console.debug(transferSource);
 					viewport.segues.push({
 						offset: poss,
 						action: "play",
@@ -179,7 +178,6 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 
 						// Ajust the size of the input field
 						var inputLen = segueValue.value.length;
-						// console.debug("" + inputLen + " = " + (inputLen > 0 ? Math.round(inputLen / 2) : 2));
 						segueValue.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 
 						// Update the length of the segue on timed sources
