@@ -4,13 +4,12 @@
 /* global console: false */
 
 
-// hsl(32,100%,50%)
-// hsl(195,100%,40%)
-// hsl( 80,100%,30%)
 
 
 var Sources = function (presentation, blockSources) {
 	var _this = this;
+
+	this.colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
 
 	var _sourcesHeader = document.createElement('h2');
 	blockSources.appendChild(_sourcesHeader);
@@ -32,6 +31,7 @@ var Sources = function (presentation, blockSources) {
 					},
 					title: d.title,
 					length: d.duration,
+					color: _this.colors[presentation.sources.length]
 				});
 				_this.updateSource();
 			});
@@ -45,6 +45,7 @@ var Sources = function (presentation, blockSources) {
 					},
 					title: slsh.presentation.title,
 					length: slsh.length(),
+					color: _this.colors[presentation.sources.length]
 				};
 				console.debug(s);
 				presentation.sources.push(s);
