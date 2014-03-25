@@ -55,7 +55,7 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 				var poss = Math.round((e.clientX - timelineElement.offsetLeft) * 0.2);
 
 				var lsg = viewport.segues[viewport.segues.length-1];
-				var preClear = typeof lsg.length != "undefined";
+				var preClear = typeof lsg != "undefined" && typeof lsg.length != "undefined";
 				
 				if (preClear) {
 					var lsgSource = presentation.sources[lsg.source];
