@@ -153,6 +153,7 @@
 		width:96%;
 		float:left;
 	}
+
 	.timeline{
 		float:left;
 		clear: left;
@@ -165,34 +166,81 @@
 		margin-bottom: 14px;
 		border-bottom: 1px solid white;
 	}
+
+
 	.segue{
-		float:left;
+		float: left;
 		cursor: pointer;
+		height: 40px;
+		overflow: hidden;
+	}
+	.segue div, .segue span, .segue input, .segue a{
+		float: left;
 	}
 	.segue-clear{
-		height: 40px;
 		border-left:5px solid white;
 	}
 	.segue-clear svg{
 		fill:white;
+	}
 
+	.segue .offset-ajust{
+		background: rgba(255,255,255,0.3);
+		width:5px;
+		height:100%;
+		display:block;
+		text-indent: -9000px;
+		cursor: e-resize;
+	}
+
+	.segue .value-sub, .segue .value-add{
+		display: none;
+	}
+	.segue.focused .value-sub, .segue.focused .value-add{
+		display: block;
+	}
+	.segue .value-sub{
+	}
+	.segue .value-add{
 	}
 	.segue input[type=text]{
 		display: block;
 		height:40px;
-		width: 85%;
 		line-height: 22px;
 		padding:0;
 		margin: 0;
 		padding-left:5px;
 		border:none;
-		border-left:5px solid rgba(255,255,255,0.3);
 		background: none;
 		color:white;
 		font-size: 22px;
 		font-family:verdana;
 		outline: none;
 	}
+	
+	/* greys out all other segues */
+	.timeline-container.focused .segue:not(.focused){
+		background:gray !important;
+	}
+	/* style for the tooltip */
+	.segue .tooltip {
+		background: blue;
+		color: white;
+		display: none;
+	}
+
+	/* changes behaviour of the focused segue*/
+	.segue.focused {
+		width:auto !important;
+	}
+	/* dependent style for the tooltip */
+	.segue.focused .tooltip {
+		display:inline-block;
+	}
+
+
+
+
 
 	.fade{
 		position: absolute;
