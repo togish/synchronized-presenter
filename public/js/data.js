@@ -244,7 +244,6 @@ var Data = function (loadTarget) {
 		});
 		dialog.appendChild(table);
 
-
 		// Adding the dialog to the 
 		fade.appendChild(dialog);
 		document.body.appendChild(fade);
@@ -264,6 +263,14 @@ var Data = function (loadTarget) {
 			var e = loadTriggers[i];
 			e.addEventListener('click', function(ev){
 				_this.loadDialog();
+			});
+		}
+		var loadTriggers = blockData.getElementsByClassName('link');
+		for(var i = 0; i < loadTriggers.length;i++){
+			var e = loadTriggers[i];
+			e.addEventListener('click', function(ev){
+				// Update the link
+				window.open("http://bachelor.dev/?b64zip=" + _this.toB64zip());
 			});
 		}
 	}

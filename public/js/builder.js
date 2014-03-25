@@ -65,17 +65,19 @@ var Builder = function (containerElement) {
 		// Setting up the timeline section
 		var _blockData = document.createElement('div');
 		_blockData.className = 'block-data';
-		_blockData.innerHTML = '<button class="save">Save presentation</button><button class="load">Load presentation</button>';
+		_blockData.innerHTML = '<button class="save">Save presentation</button><button class="load">Load presentation</button><button class="link">Show presentation</button>';
 	
 		var data = new Data(_this);
 		data.init(_blockData);
 		window.dt = data;
 	
 		containerElement.appendChild(_blockHeader);
+		containerElement.appendChild(_blockData);
+
 		containerElement.appendChild(_blockPreview);
 		containerElement.appendChild(_blockSources);
+
 		containerElement.appendChild(_blockTimeline);
-		containerElement.appendChild(_blockData);
 	};
 	
 	// Tries to auto load the presentation dependent on the url parmeters
