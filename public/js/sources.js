@@ -66,7 +66,7 @@ var Sources = function (presentation, blockSources) {
 
 		var addLine = function(title, transferData){
 			var element = document.createElement('h3');
-			element.innerHTML = '<span class="drag" draggable="true">+</span>'+title+'<span>3:25<span class="viewport">A</span></span>';
+			element.innerHTML = '<span class="drag" draggable="true">+</span>'+title+'<span class="timestamp">3:25<span class="viewport">A</span></span>';
 			element.addEventListener('dragstart', function(e){
 				e.dataTransfer.dropEffect = 'copy';
 				e.dataTransfer.setData("text/plain", transferData);
@@ -82,6 +82,33 @@ var Sources = function (presentation, blockSources) {
 		presentation.sources.forEach(function(source, index){
 			source.htmlElement = addLine(source.title, index);
 			source.htmlElement.style.background = source.color;
+
+			source.htmlElement.addEventListener('click', function(e){
+				source.htmlElement.classList.add("focused");
+			});
+			source.htmlElement.addEventListener('mouseleave', function(e){
+				source.htmlElement.classList.remove("focused");
+			});
+
+			var removeSource = document.createElement('a');
+			removeSource.className = "remove";
+			removeSource.innerHTML = "X";
+			removeSource.addEventListener('click', function(e){
+				presentation.sources.splice(index, 1);
+				presentation.viewports.forEach(function(vp){
+					vp.segues.forEach(function(sg){
+						if(sg.source == index){
+							// Segue associated with the source. Remove it!
+							vp.segues.remove(sg);
+						} else if (index < sg.source){
+							// ajust offset
+							sg.source = sg.source-1;
+						}
+					});
+				});
+				_this.updateSource();
+			});
+			source.htmlElement.appendChild(removeSource);
 		});
 
 		_clearSource = addLine("Clear viewport", "clear");

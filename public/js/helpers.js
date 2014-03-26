@@ -23,3 +23,11 @@ var UrlParams = function () {
 	return query_string;
 } ();
 
+
+// Adding function to the array prototype
+Array.prototype.remove = function(value) {
+	var index = this.indexOf(value);
+	if (index != -1) {
+		return this.splice(index, 1);
+	}
+}

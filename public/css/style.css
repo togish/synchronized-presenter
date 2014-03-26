@@ -99,7 +99,7 @@
 	.block-sources span{
 		float: right;
 	}
-	.block-sources span.viewport{
+	.block-sources span.viewport, .block-sources h3 a.remove{
 		float: none;
 		padding:10px 15px;
 		background: rgba(255,255,255,0.3);
@@ -110,16 +110,25 @@
 	.block-sources h3{
 		clear:both;
 	}
-	.block-sources h3.inactive span{
+
+	.block-sources h3.inactive span.timestamp, .block-sources h3.focused span.timestamp{
 		display:none;
 	}
 	.block-sources h3 span.drag{
-		display: inline-block;
 		width:40px;
 		float:left;
 		text-align: center;
 		cursor: move;
 	}
+
+	.block-sources h3 a.remove{
+		display:none;
+		float: right;
+	}
+	.block-sources h3.focused a.remove{
+		display:inline-block;
+	}
+
 
 	.block-sources input[type=text]{
 		width:94%;
