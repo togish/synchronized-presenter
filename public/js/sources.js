@@ -35,7 +35,7 @@ var Sources = function (presentation, blockSources) {
 				});
 				_this.updateSource();
 			});
-		} else if (url.match(/slideshare/i)){
+		} else if (url.match(/\.slideshare\.net/i)){
 			var callback = function(){
 				var s = {
 					type: "slideshare",
