@@ -214,10 +214,10 @@
 		cursor: e-resize;
 	}
 
-	.segue .value-sub, .segue .value-add{
+	.segue .value-sub, .segue .value-add, .segue .remove{
 		display: none;
 	}
-	.segue.focused .value-sub, .segue.focused .value-add{
+	.segue.focused .value-sub, .segue.focused .value-add, .segue.focused .remove{
 		display: block;
 	}
 	.segue .value-sub{

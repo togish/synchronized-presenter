@@ -219,6 +219,17 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 						valueAjustRelative(1);
 					});
 
+					// Building html element for the delete segue
+					var segueDelete = document.createElement('a');
+					segueDelete.className = "focused-visible remove";
+					segueDelete.innerHTML = "X";
+					segueDelete.addEventListener('click', function(e){
+						e.preventDefault();
+						segue.htmlElement.remove();
+						arr.splice(index, 1);
+						_this.render();
+					});
+
 					// Building html element for the value enter field
 					var segueValue = document.createElement('input');
 					segueValue.type="text";
@@ -287,6 +298,8 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 					segueElement.appendChild(valueSub);
 					segueElement.appendChild(segueValue);
 					segueElement.appendChild(valueAdd);
+					segueElement.appendChild(segueDelete);
+					
 				}
 
 				timelineElement.appendChild(segueElement);
