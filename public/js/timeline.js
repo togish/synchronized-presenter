@@ -159,6 +159,8 @@ var Timeline = function (loadTarget) {
 				var segueElement = document.createElement('div');
 				segueElement.className ="segue segue-"+segue.action;
 				segueElement.style.width = ''+length*5+'px';
+				segueElement.style.minWidth = segueElement.style.width;
+
 				if(sgSource == undefined){
 					segueElement.innerHTML = '<svg viewBox="0 0 1 40" preserveAspectRatio="none">'+
 					'<polygon class="fill" points="0,18 1,18 1,15 0,15"></polygon>'+
