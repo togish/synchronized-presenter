@@ -16,31 +16,10 @@
 		<script type="text/javascript" src="/public/js/sources.js"></script>
 		<script type="text/javascript" src="/public/js/timeline.js"></script>
 		<script type="text/javascript">
-
-		var emptyPresentation = {
-			info: {
-				name: ""
-			},
-			sources:[
-			],
-			viewports: [
-				{
-					lastSegue: {},
-					segues: [],
-				},
-				{
-					lastSegue: {},
-					segues: [],
-				}
-			]
-		};
-
 		function pageLoaded(){
 			var builder = new Builder(document.body);
 			builder.initUI();
-			if(!builder.loadAuto()){
-				builder.load(emptyPresentation);
-			}
+			builder.loadAuto();
 		};
 		</script>
 		<link rel="stylesheet" href="public/css/style.css">
