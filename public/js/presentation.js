@@ -192,6 +192,7 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 			var current = _this.presentation.sources[viewport.lastSegue.source].handlers[viewportIdx];
 			// TODO Ignore if not in the time scope.
 			// return previous;
+			if(typeof current === "undefined") return previous;
 
 			if(previous == _this.ERROR || current.getStatus() == current.ERROR) return _this.ERROR;
 			else if(previous == _this.LOADING || current.getStatus() == current.LOADING) return _this.LOADING;
@@ -294,6 +295,8 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 					source.handlers[viewportIdx] = new SlideSharePlayer(source, sourceElement, childCallback);
 				} else if(source.type == "youtube"){
 					source.handlers[viewportIdx] = new YouTubePlayer(source, sourceElement, childCallback);
+				} else if(source.type == "pdfjs"){
+					source.handlers[viewportIdx] = new PdfJsPlayer(source, sourceElement, childCallback);
 				} else {
 					sourceElement.remove();
 					return;
