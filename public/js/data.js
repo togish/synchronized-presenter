@@ -40,7 +40,12 @@ var Data = function (loadTarget) {
 	 * Loads the presentation into the loadTarget
 	 */
 	var _buildPresentation = function(presentationText){
-		var presentation = JSON.parse(presentationText);
+		try{
+			var presentation = JSON.parse(presentationText);
+		} catch(e){
+			alert("Could not load presentation!\r\n- The format is invalid!");
+			return false;
+		}
 		// TODO Error handling. How does the JSON parser respond errors..?
 
 		// TODO Validation of the presentation element.
@@ -144,10 +149,21 @@ var Data = function (loadTarget) {
 	/*
 	 * Loads the content of the url's destination into the presentation object
 	 */
-	this.load = function(url){
-		// TODO Make this use the iframe content hax
+	this.load = function(url, proxy){
 		var request = new XMLHttpRequest();
-  		request.open('get', url, true);
+		if(proxy){
+  			request.open('get', 'http://www.corsproxy.com/' + url, true);
+		} else {
+  			request.open('get', url, true);
+		}
+  		request.onerror = function(e){
+  			// if no proxy and failing.. The try with proxy!
+  			if (!proxy) {
+  				_this.load(url, true);
+  			} else {
+				alert("Could not load presentation!\n\n- No internet connection?\n- Dead link?\n- The browsers origin policy refused the action");
+  			}
+  		};
   		request.onreadystatechange = function() {
 			if (request.readyState == 4 && request.status === 200) {
 				_buildPresentation(request.responseText);
