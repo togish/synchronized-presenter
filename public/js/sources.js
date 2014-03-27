@@ -49,14 +49,41 @@ var Sources = function (loadTarget) {
 					data: {
 						url: url
 					},
-					title: slsh.presentation.title,
-					length: slsh.length(),
+					title: slideShare.presentation.title,
+					length: slideShare.length(),
 					color: _this.colors[loadTarget.presentation.sources.length]
 				});
 
 				_this.render();
 			};
 			var slideShare = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
+		} else if (url.match(/.*\.pdf$/i)){
+			var filename = url;
+			var m = filename.match(/^.*\//);
+			if(m != null && m.length > 0){
+				filename = filename.substring(m[0].length);
+			}
+
+			var res = {
+				type: "pdfjs",
+				timed: false,
+				data: {
+					url: url
+				},
+				title: filename,
+				color: _this.colors[loadTarget.presentation.sources.length]
+			};
+
+			var c = function(pp){
+				res.length = pp.getDuration();
+				loadTarget.presentation.sources.push(res);
+				_this.render();
+			};
+
+			var pdf = new PdfJsPlayer(res, document.createElement("div"), c);
+			pdf.init();
+		} else {
+			console.debug("No alternative found");
 		}
 	};
 

@@ -22,6 +22,8 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 	// When the player is executing playback
 	this.PLAYING = 'playing';
 
+	var _this = this;
+
 	// Example:
 	// callback(this, this.PLAYING);
 	var _numOfPages = 0;
@@ -82,7 +84,6 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 
 	this.init = function(){
 		// Grap the url from the configuration
-		console.debug(resource);
 		PDFJS.getDocument(resource.data.url).then(function(pdf) {
 			_numOfPages = pdf.numPages;
 			var addPage = function(i){
@@ -102,6 +103,7 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 			for (var i = 1; i <= _numOfPages; i++) {
 				addPage(i);
 			}
+			console.debug(callback(_this, _this.READY));
 		});
 	};
 };
