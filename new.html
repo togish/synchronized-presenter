@@ -37,6 +37,7 @@
 
 		function pageLoaded(){
 			var builder = new Builder(document.body);
+			builder.initUI();
 			if(!builder.loadAuto()){
 				builder.load(emptyPresentation);
 			}

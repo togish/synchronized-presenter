@@ -91,44 +91,46 @@
 
 
 	.block-data button{
-		width:33%;
+		width:25%;
 	}
 
 
 	/* block source additions */
 	.block-sources span{
-		float: right;
-	}
-	.block-sources span.viewport, .block-sources h3 a.remove{
-		float: none;
-		padding:10px 15px;
-		background: rgba(255,255,255,0.3);
-		display: inline-block;
-		padding: 0 15px;
-		margin-left: 15px;
+		float: left;
 	}
 	.block-sources h3{
 		clear:both;
+		height:40px;
 	}
+	
 
-	.block-sources h3.inactive span.timestamp, .block-sources h3.focused span.timestamp{
-		display:none;
-	}
 	.block-sources h3 span.drag{
 		width:40px;
-		float:left;
 		text-align: center;
 		cursor: move;
 	}
-
-	.block-sources h3 a.remove{
-		display:none;
-		float: right;
+	.block-sources h3 span.type{
+		/* YAY For the icons dependent on the types */
 	}
+	.block-sources h3 span.title{
+
+	}
+	.block-sources h3.active span.shows,
 	.block-sources h3.focused a.remove{
 		display:inline-block;
 	}
 
+	.block-sources h3 span.shows,
+	.block-sources h3.focused span.shows,
+	.block-sources h3 a.remove{
+		float: right;
+		display:none;
+		padding: 10px 15px;
+		background: rgba(255,255,255,0.3);
+		padding: 0 15px;
+		margin-left: 15px;
+	}
 
 	.block-sources input[type=text]{
 		width:94%;

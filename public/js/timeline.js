@@ -4,16 +4,51 @@
 /* global YouTubePlayer: false */
 /* global Event: false */
 /* global console: false */
-var Timeline = function (presentation, timelineBlock, editSegueCallback) {
-	var _timelineList = document.createElement('div');
-	_timelineList.className = "timeline-list";
-	timelineBlock.appendChild(_timelineList);
-
-
-	var _timelineContainer = document.createElement('div');
-	_timelineContainer.className = "timeline-container";
-	timelineBlock.appendChild(_timelineContainer);
+var Timeline = function (loadTarget) {
+	// presentation, timelineBlock
 	var _this = this;
+
+	var _timelineList;
+	var _timelineContainer;
+
+	this.initUI = function(blockTimeline){
+		_timelineList = document.createElement('div');
+		_timelineList.className = "timeline-list";
+ 	
+		_timelineContainer = document.createElement('div');
+		_timelineContainer.className = "timeline-container";
+
+		blockTimeline.appendChild(_timelineList);
+		blockTimeline.appendChild(_timelineContainer);
+
+		// Subscribe to events
+		loadTarget.addEventListener("presentationLoaded", function(ev){
+			// Renders the source list when the presentation is loaded
+			_this.render();
+		});
+
+		loadTarget.addEventListener("sourceRemoved", function(ev){
+			var index = ev.detail;
+			// Updates the segues
+			loadTarget.presentation.viewports.forEach(function(viewport){
+				viewport.segues.forEach(function(segue){
+					if(segue.source == index){
+						// Segue associated with the source. Remove it!
+						viewport.segues.remove(segue);
+					} else if (index < segue.source){
+						// ajust the offset
+						segue.source = segue.source-1;
+					}
+				});
+			});
+			_this.render();
+		});
+
+		loadTarget.addEventListener("positionChanged", function(ev){
+			// TODO Update the cursor
+		});
+	};
+
 
 	this.render = function(){
 		// Clears the containers
@@ -27,7 +62,7 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 		var maxTimelineLength = 0;
 
 		// Handling the different viewports
-		presentation.viewports.forEach(function(viewport, index){
+		loadTarget.presentation.viewports.forEach(function(viewport, index){
 			// Add the viewport to the viewport list in the left
 			var nameElement = document.createElement('div');
 			nameElement.innerHTML = '' + index;
@@ -36,7 +71,6 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 			// Add the segue container timeline row
 			var timelineElement = document.createElement('div');
 			timelineElement.className = "timeline";
-
 			timelineElement.addEventListener('dragover', function(e){
 				if (e.preventDefault) {
 					e.preventDefault(); // Necessary. Allows us to drop.
@@ -51,6 +85,8 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 			timelineElement.addEventListener('dragleave', function(){
   				this.classList.remove('over');
 			}, false);
+
+			// Handles when an element is dropped over the timeline
 			timelineElement.addEventListener('drop', function(e){
 				var poss = Math.round((e.clientX - timelineElement.offsetLeft) * 0.2);
 
@@ -87,18 +123,19 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 				});
 
 				_this.render();
-
 			}, false);
-
 
 			viewport.htmlElement = timelineElement;
 			_timelineContainer.appendChild(timelineElement);
+
+			
+
 
 			// Adding content to the timeline
 			viewport.segues.forEach(function(segue, index, arr){
 				// TODO Handle the case where we are handling the last event.! What about the length and if it is rendered at all!
 				// The last one should be a stop marker! :D
-				var sgSource = presentation.sources[segue.source];
+				var sgSource = loadTarget.presentation.sources[segue.source];
 				var isNotLast = index < arr.length-1;
 
 				// Find the length of the segue
@@ -132,28 +169,10 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 					// Tries to ajust the value of a segue. Returns true if success!
 					var valueAjust = function(input){
 						// Function for encoding seconds into human representation
-						var multiplier = [1, 60, 3600, 86400];
-						var vTextBuilder = function(cont, multi, rest){
-							if (multi < 0) {
-								return cont;
-							} else if(rest == 0 && cont.length == 0){
-								return "0:00";
-							}
-							// Rest to next dimention
-							var nRest = rest % multiplier[multi];
-							var nNum = ((rest - nRest) / multiplier[multi]);
-							cont += cont.length == 0 && multi == 0 ? "0" : "";
-							if(nNum > 0 || cont.length > 0){
-								cont += cont.length > 0 ? ":" : "";
-								cont += ("" + nNum).length < 2 && cont.length > 0 ? "0"+nNum : ""+nNum;
-							}
-							// Continues the process
-							return vTextBuilder(cont, multi-1, nRest);
-						};
-
 						var seconds = segue.value;
 						if(typeof input == "string"){
 							var newValue = null;
+							var multiplier = [1, 60, 3600, 86400];
 							// I know fucking regular expressions! bitches!
 							newValue = sgSource.timed ? input.match(/[0-9]+\:[0-5][0-9]/) : input.match(/[1-9][0-9]?|^[0]$/);
 							if(!(newValue == null || newValue.length > 1)){
@@ -174,7 +193,7 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 						}
 
 						// Build the string representation of the value
-						segueValue.value = sgSource.timed ? vTextBuilder("", multiplier.length-1, segue.value) : segue.value;
+						segueValue.value = sgSource.timed ? SecondsToTime(segue.value) : segue.value;
 
 						// Ajust the size of the input field
 						var inputLen = segueValue.value.length;
@@ -187,6 +206,8 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 						// 	var length = sgSource.length - segue.value;
 						// 	segueElement.style.width = ''+length*5+'px';
 						// }
+
+						loadTarget.dispatchEvent(new CustomEvent("segueChanged"));
 						return ret;
 					};
 
@@ -308,8 +329,25 @@ var Timeline = function (presentation, timelineBlock, editSegueCallback) {
 		});
 
 
-		presentation.viewports.forEach(function(viewport, index){
+		loadTarget.presentation.viewports.forEach(function(viewport, index){
 			viewport.htmlElement.style.width = '' + (maxTimelineLength + 50) * 5 + 'px';
 		});
 	}
+
+
+/*
+		// Updates the segues
+		loadTarget.presentation.viewports.forEach(function(viewport){
+			viewport.segues.forEach(function(segue){
+				if(segue.source == index){
+					// Segue associated with the source. Remove it!
+					viewport.segues.remove(segue);
+				} else if (index < segue.source){
+					// ajust the offset
+					segue.source = segue.source-1;
+				}
+			});
+		});
+*/
+
 };

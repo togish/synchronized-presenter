@@ -35,7 +35,7 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 
 	// Proxy methods for event subscribe, remove and dispatch
 	this.addEventListener = function (a,b,c) {containerElement.addEventListener(a,b,c);};
-	this.dispatchEvent = function(a){containerElement.addEventListener(a);};
+	this.dispatchEvent = function(a){containerElement.dispatchEvent(a);};
 	this.removeEventListener = function(a,b,c){containerElement.removeEventListener(a,b,c);};
 	this.presentation = {};
 
@@ -312,5 +312,4 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 			});
 		});
 	};
-
 };

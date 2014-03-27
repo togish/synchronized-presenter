@@ -15,39 +15,73 @@
  *		- and expose the presentation at obj.presentation
  */
 var Data = function (loadTarget) {
+	// Scope rule hax
 	var _this = this;
-	var _basePath = "http://bachelor.dev/";
-	var presentation = loadTarget.presentation != undefined ? loadTarget.presentation : {};
-	var _done = function(){};
 
-	// Builds the presentation object from a text string
+	// Checks if the loadTarget is compatible
+	if(!("presentation" in loadTarget)){
+		throw 'Load target is missing attribute "presentation"!';
+	}
+	if(!("load" in loadTarget) || typeof loadTarget.load != "function"){
+		throw 'Load target is missing function "load"!';
+	}
+
+	// Function called when a fade needs to be disposed
+	var _disposeFade = function(){};
+
+	// Basepath for generating links
+	this.presenterBasePath = "http://bachelor.dev/";
+
+	// List of colors that is good for the presentations appearance
+	this.colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
+
+	/*
+	 * Builds the presentation object from a text string
+	 * Loads the presentation into the loadTarget
+	 */
 	var _buildPresentation = function(presentationText){
-		var ps = JSON.parse(presentationText);
+		var presentation = JSON.parse(presentationText);
+		// TODO Error handling. How does the JSON parser respond errors..?
 
-		var colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
-		ps.sources.forEach(function(s, idx){
-			s.color = colors[idx];
+		// TODO Validation of the presentation element.
+		// 	- Ensure it is good for production.
+
+		// Assigning colors for the sources.
+		presentation.sources.forEach(function(s, idx){
+			s.color = _this.colors[idx];
 		});
 
-		_done();
-		loadTarget.load(ps);
+		// In the case there is a dialog, then dispose it.
+		_disposeFade();
+
+		// Instructs the load target to load the presentation.
+		loadTarget.load(presentation);
 	};
 
-	// Clean presentation returns a clean instance of a presentation
+	/*
+	 * Cleans the presentation in the loadTarget
+	 * returns a clean instance of a presentation, ready for distribution
+	 */
 	var _cleanPresentation = function(){
+		// If no presentation retrn empty JSON
+		if(typeof loadTarget.presentation == "undefined"){
+			return "";
+		}
+
+		// Preparing the clean presentation
 		var clean ={};
-		clean.info = presentation.info;
+		clean.info = loadTarget.presentation.info;
 		clean.sources = [];
 		clean.viewports = [];
-
-		presentation.sources.forEach(function(s){
+		loadTarget.presentation.sources.forEach(function(s){
 			clean.sources.push({
 				type: s.type,
 				title: s.title,
 				data: s.data,
+				// Length, color,,... What more?
 			});
 		});
-		presentation.viewports.forEach(function(v){
+		loadTarget.presentation.viewports.forEach(function(v){
 			var sgs = [];
 			v.segues.forEach(function(s){
 				var ss = {
@@ -71,56 +105,118 @@ var Data = function (loadTarget) {
 		return JSON.stringify(clean);
 	};
 	
-
-	// Turns the provided base64 encoded zipfile into a presentation
+	/*
+	 * Turns the provided base64 encoded zipfile into a presentation
+	 */
 	this.fromB64zip = function(zipString){
 		var zip = new JSZip();
+
+		// Loads the file data
 		zip.load(zipString, {base64:true});
-		var content = zip.file("p.json").asText()
-		console.log("Length of content in base64 zip: " + content.length);
+
+		// extracts the content of the presentation
+		var content = zip.file("p.json").asText();
+
+		// Builds the presentation
 		_buildPresentation(content);
 	};
 
-	// Returns a base64 encoded zipfile of the current presentation
+	/*
+	 * Returns a base64 encoded zipfile of the current presentation
+	 */
 	this.toB64zip = function(){
 		var zip = new JSZip();
-		zip.file("p.json", _cleanPresentation(),{compression:"DEFLATE"});
-		var content = zip.generate();
-		console.log("Length of base64 zip: " + content.length);
-		return content;
+
+		// Adds the presentation to the zipfile
+		zip.file("p.json", _cleanPresentation(), {compression:"DEFLATE"});
+
+		// Returns the file string
+		return zip.generate();
+	};
+
+	/*
+	 * Returns a link with the presentation embeded in the url
+	 */
+	this.link = function(){
+		return _this.presenterBasePath + "?b64zip=" + _this.toB64zip();
 	};
 	
-	// Loads the content of the url into the presentation object
+	/*
+	 * Loads the content of the url's destination into the presentation object
+	 */
 	this.load = function(url){
-		// TODO Make this request syncronus
-		var req = typeof XMLHttpRequest != 'undefined' ? new XMLHttpRequest() : new ActiveXObject('Microsoft.XMLHTTP');
-  		req.open('get', url, true);
-  		req.onreadystatechange = function() {
-			if (req.readyState == 4 && req.status === 200) {
-				_buildPresentation(req.responseText);
+		// TODO Make this use the iframe content hax
+		var request = new XMLHttpRequest();
+  		request.open('get', url, true);
+  		request.onreadystatechange = function() {
+			if (request.readyState == 4 && request.status === 200) {
+				_buildPresentation(request.responseText);
 			}
 		};
-		req.send();
+		request.send();
 	};
 
-	this.saveDialog = function(){
-		var pres = _cleanPresentation();
-		var filename = "" + presentation.info.name + ".json";
-
+	/*
+	 * Builds a dialog with the specified title
+	 */
+	var _createDialog = function(title, sinks){
+		// Builds the fade for the background
 		var fade = document.createElement('div');
 		fade.className = "fade";
 		fade.addEventListener('click', function(e){
 			e.preventDefault();
 			if(e.target == fade){
-				_done();
+				_disposeFade();
 			}
 		});
-		_done = function(){fade.remove();};
+		_disposeFade = function(){fade.remove();};
 
+		// Builds the dialog
 		var dialog = document.createElement('div');
 		dialog.className = "dialog";
-		dialog.innerHTML = "<h1>Save presentation</h1>";
+		dialog.innerHTML = '<h1>'+title+'</h1>';
 
+
+		// Generating destination table. Adding the sinks to the UI
+		var table = document.createElement("table");
+		sinks.forEach(function(element){
+			var row = document.createElement("tr");
+			row.innerHTML = "<td><h3>" + element.text + "</td></h3>";
+
+			var cell = document.createElement("td");
+			cell.appendChild(element.button);
+			
+			row.appendChild(cell);
+			table.appendChild(row);
+		});
+		dialog.appendChild(table);
+
+		// Building the done button
+		var done = document.createElement('button');
+		done.innerHTML = "DONE";
+		done.className = "done";
+		done.addEventListener('click', function(){
+			_disposeFade();
+		});
+		dialog.appendChild(done);
+
+
+		// Adds the fade to the body
+		fade.appendChild(dialog);
+		document.body.appendChild(fade);
+
+		// Returns the dialog
+		return dialog;
+	};
+
+	/*
+	 * Presents a save presentation dialog
+	 */
+	this.saveDialog = function(){
+		var presentation = _cleanPresentation();
+		var filename = presentation.info.name + ".json";
+
+		// Holds the save destinations
 		var sinks = [];
 
 		// Building buttons for save actions
@@ -136,7 +232,6 @@ var Data = function (loadTarget) {
 			button: btnFile 
 		});
 
-
 		// Building save to dropbox shit
 		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
 			var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(pres), filename);
@@ -146,59 +241,18 @@ var Data = function (loadTarget) {
 			});
 		}
 
-
-		// Generating destination table
-		var table = document.createElement("table");
-		sinks.forEach(function(ele, idx){
-			var row = document.createElement("tr");
-			row.innerHTML = "<td><h3>" + ele.text + "</td></h3>";
-			
-			var cell = document.createElement("td");
-			cell.appendChild(ele.button);
-			row.appendChild(cell);
-
-			table.appendChild(row);
-		});
-		dialog.appendChild(table);
-
-
-		// Close/done button
-		var btnDone = document.createElement('button');
-		btnDone.innerHTML = "DONE";
-		btnDone.className = "done";
-		btnDone.addEventListener('click', function(){
-			_done();
-		});
-		dialog.appendChild(btnDone);
-
-		// Adding the dialog to the 
-		fade.appendChild(dialog);
-		document.body.appendChild(fade);
+		// Shows the dialog
+		_createDialog('Save presentation', sinks);
 	};
 
+	/*
+	 * Presents a load presentation dialog
+	 */
 	this.loadDialog = function(){
-		// TODO distinguis between
-		// 		forced load due missing presentation
-		// 		optinal load
-
-		var fade = document.createElement('div');
-		fade.className = "fade";
-		fade.addEventListener('click', function(e){
-			if(e.target == fade){
-				e.preventDefault();
-				_done();
-			}
-		});
-		_done = function(){fade.remove();};
-
-
-		var dialog = document.createElement('div');
-		dialog.className = "dialog";
-		dialog.innerHTML = "<h1>Load presentation</h1>";
-
+		// Holds the sources
 		var sinks = [];
 
-		// Building buttons for save actions
+		// Building buttons for read actions
 		var btnFile = document.createElement("input");
 		btnFile.type = 'file';
 		btnFile.name = 'file';
@@ -215,6 +269,7 @@ var Data = function (loadTarget) {
 			button: btnFile 
 		});
 
+		// Building dropbox ui
 		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
 			var btnDropbox = Dropbox.createChooseButton({
 				success: function(files) {
@@ -230,48 +285,40 @@ var Data = function (loadTarget) {
 			});
 		}
 
-		// Generating destination table
-		var table = document.createElement("table");
-		sinks.forEach(function(ele, idx){
-			var row = document.createElement("tr");
-			row.innerHTML = "<td><h3>" + ele.text + "</td></h3>";
-			
-			var cell = document.createElement("td");
-			cell.appendChild(ele.button);
-			row.appendChild(cell);
-
-			table.appendChild(row);
-		});
-		dialog.appendChild(table);
-
-		// Adding the dialog to the 
-		fade.appendChild(dialog);
-		document.body.appendChild(fade);
+		// Shows the dialog
+		_createDialog('Save presentation', sinks);
 	};
 
-	// Setting up listners for the ui actions
-	this.init = function(blockData){
-		var saveTriggers = blockData.getElementsByClassName('save');
-		for(var i = 0; i < saveTriggers.length;i++){
-			var e = saveTriggers[i];
-			e.addEventListener('click', function(ev){
-				_this.saveDialog();
-			});
-		}
-		var loadTriggers = blockData.getElementsByClassName('load');
-		for(var i = 0; i < loadTriggers.length;i++){
-			var e = loadTriggers[i];
-			e.addEventListener('click', function(ev){
-				_this.loadDialog();
-			});
-		}
-		var loadTriggers = blockData.getElementsByClassName('link');
-		for(var i = 0; i < loadTriggers.length;i++){
-			var e = loadTriggers[i];
-			e.addEventListener('click', function(ev){
-				// Update the link
-				window.open("http://bachelor.dev/?b64zip=" + _this.toB64zip());
-			});
+	/*
+	 * Creates a new empty presentation and loads it
+	 */
+	this.create = function(){
+		_buildPresentation('{info: {name: ""},sources:[],viewports:[{lastSegue:{},segues:[],}]}');
+	};
+
+	/*
+	 * Opens the presentation in the presenter in a new window
+	 */
+	this.linkOpen = function(){
+		window.open(_this.link());
+	};
+
+	/*
+	 * Initiates the ui bindings
+	 */
+	this.initUI = function(blockData){
+		var classList = {
+			save: _this.saveDialog,
+			load: _this.loadDialog,
+			link: _this.linkOpen,
+			create: _this.create
+		};
+
+		for (var className in classList) {
+			var triggers = blockData.getElementsByClassName(className);
+			for(var i = 0; i < triggers.length; i++){
+				triggers[i].addEventListener('click', classList[className]);
+			}
 		}
 	}
 };

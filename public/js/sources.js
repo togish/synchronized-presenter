@@ -4,26 +4,31 @@
 /* global console: false */
 
 
-
-
-var Sources = function (presentation, blockSources) {
+/*
+ * 
+ */
+var Sources = function (loadTarget) {
+	// Scope rule hax
 	var _this = this;
 
+	// Color list
 	this.colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
 
-	var _sourcesHeader = document.createElement('h2');
-	blockSources.appendChild(_sourcesHeader);
+	var _sourcesHeader;
+	var _sourcesList;
 
-	var _sourcesList = document.createElement('div');
-	blockSources.appendChild(_sourcesList);
 
-	var _clearSource;
-
+	/*
+	 * Adds a source to the presentation
+	 */
 	this.addSource = function(url){
+		// Tries if it is a youtube link
 		var youtubeVidId = YouTubeHelpers.parseUrl(url);
 		if(typeof youtubeVidId == "string"){
+			// Loads metadata
 			YouTubeHelpers.loadMetadata(youtubeVidId,function(d){
-				presentation.sources.push({
+				// Adds the source to the presentation
+				loadTarget.presentation.sources.push({
 					type: "youtube",
 					timed: true,
 					data: {
@@ -31,13 +36,14 @@ var Sources = function (presentation, blockSources) {
 					},
 					title: d.title,
 					length: d.duration,
-					color: _this.colors[presentation.sources.length]
+					color: _this.colors[loadTarget.presentation.sources.length]
 				});
-				_this.updateSource();
+
+				_this.render();
 			});
 		} else if (url.match(/\.slideshare\.net/i)){
 			var callback = function(){
-				var s = {
+				loadTarget.presentation.sources.push({
 					type: "slideshare",
 					timed: false,
 					data: {
@@ -45,112 +51,166 @@ var Sources = function (presentation, blockSources) {
 					},
 					title: slsh.presentation.title,
 					length: slsh.length(),
-					color: _this.colors[presentation.sources.length]
-				};
-				console.debug(s);
-				presentation.sources.push(s);
-				_this.updateSource();
-			};
-			var slsh = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
+					color: _this.colors[loadTarget.presentation.sources.length]
+				});
 
+				_this.render();
+			};
+			var slideShare = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
 		}
 	};
 
+	/*
+	 * Adds a source to the presentation
+	 */
+	this.removeSource = function(index){
+		// Removes the source at the given index
+		loadTarget.presentation.sources.splice(index, 1);
 
-	// Updated the list of sources
-	this.updateSource = function(){
+		// Fires event about the change
+		loadTarget.dispatchEvent(new CustomEvent("sourceRemoved", {detail: index}));
+	};
+
+
+	/*
+	 * Updates the list of sources
+	 */
+	this.render = function(){
 		// Clears the container
 		while(_sourcesList.firstChild){
 			_sourcesList.removeChild(_sourcesList.firstChild);	
 		}
 
-		var addLine = function(title, transferData){
+		// Function for adding a source line to the container
+		var addLine = function(titleText, transferData){
 			var element = document.createElement('h3');
-			element.innerHTML = '<span class="drag" draggable="true">+</span>'+title+'<span class="timestamp">3:25<span class="viewport">A</span></span>';
-			element.addEventListener('dragstart', function(e){
+
+			var draggable = document.createElement('span');
+			draggable.className = 'drag';
+			draggable.draggable = 'true';
+			draggable.innerHTML = '+';
+			draggable.addEventListener('dragstart', function(e){
 				e.dataTransfer.dropEffect = 'copy';
 				e.dataTransfer.setData("text/plain", transferData);
 			}, false);
-			element.addEventListener('dragend', function(e){
-				this.style.opacity = '1';
+			draggable.addEventListener('dragend', function(e){
 				e.dataTransfer.dropEffect = 'copy';
 			}, false);
+			element.appendChild(draggable);
+
+			if(typeof type != "undefined"){
+				var type = document.createElement('span');
+				type.className = 'type type-' + type;
+				type.innerHTML = '' + type;
+				element.appendChild(type);
+			}
+
+			var title = document.createElement('span');
+			title.className = 'title';
+			title.innerHTML = '' + titleText;
+			element.appendChild(title);
+
+			var shows = document.createElement('span');
+			shows.className = 'shows';
+			element.appendChild(shows);
+
+			// Adds the line to the container
 			_sourcesList.appendChild(element);
-			return element;
+			return {line: element, shows:shows};
 		};
 
-		presentation.sources.forEach(function(source, index){
+		// Adds the sources to the container
+		loadTarget.presentation.sources.forEach(function(source, index){
+			
 			source.htmlElement = addLine(source.title, index);
-			source.htmlElement.style.background = source.color;
+			source.htmlElement.line.style.background = source.color;
 
-			source.htmlElement.addEventListener('click', function(e){
-				source.htmlElement.classList.add("focused");
+			// Adds ability to click and show extra buttons on a source.
+			source.htmlElement.line.addEventListener('click', function(e){
+				source.htmlElement.line.classList.add("focused");
 			});
-			source.htmlElement.addEventListener('mouseleave', function(e){
-				source.htmlElement.classList.remove("focused");
+			source.htmlElement.line.addEventListener('mouseleave', function(e){
+				source.htmlElement.line.classList.remove("focused");
 			});
 
+			// Adds remove button to the source
 			var removeSource = document.createElement('a');
 			removeSource.className = "remove";
 			removeSource.innerHTML = "X";
 			removeSource.addEventListener('click', function(e){
-				presentation.sources.splice(index, 1);
-				presentation.viewports.forEach(function(vp){
-					vp.segues.forEach(function(sg){
-						if(sg.source == index){
-							// Segue associated with the source. Remove it!
-							vp.segues.remove(sg);
-						} else if (index < sg.source){
-							// ajust offset
-							sg.source = sg.source-1;
-						}
-					});
-				});
-				_this.updateSource();
+				_this.removeSource(index);
 			});
-			source.htmlElement.appendChild(removeSource);
+			source.htmlElement.line.appendChild(removeSource);
 		});
 
+		// Custom source for the clear segue
 		_clearSource = addLine("Clear viewport", "clear");
-		_clearSource.classList.add("inactive");
 
-
+		// Builds the field for adding more sources
 		var addSource = document.createElement("h3");
-		var addSourceInp = document.createElement("input");
-		addSourceInp.type = "text";
-		addSourceInp.placeholder = "Add source. Paste link here!";
-		addSourceInp.addEventListener("keyup", function(e){
+		var addSourceInput = document.createElement("input");
+		addSourceInput.type = "text";
+		addSourceInput.placeholder = "Add source. Paste link here!";
+		addSourceInput.addEventListener("keyup", function(e){
 			if(e.keyCode == 13){
 				e.preventDefault();
-				_this.addSource(addSourceInp.value);
+				_this.addSource(addSourceInput.value);
 			}
 		});
-		addSource.appendChild(addSourceInp);
+		addSource.appendChild(addSourceInput);
 		_sourcesList.appendChild(addSource);
-		// TODO Add click lister?
 	}
 
 	// Updates the position for updating position. (Called every single second!)
-	this.updatePosition = function(position, length){
+	this.positionChanged = function(position, length){
+		// TODO Implement this when the preview is added!
+		return;
 		// Set the length and position fields
 		_sourcesHeader.innerHTML = "Sources <span>" + position + " / " + length + "</span>";
-		
-		// For source displayed
-		// This will fuck up if one source is in two viewports at the same time!
+
+		// <span class="timestamp">3:25<span class="viewport">A</span></span>
 		presentation.sources.forEach(function(source, sourceIndex){
 			presentation.viewports.forEach(function(viewport, viewportIndex){
 				// Is it among last event in any viewports?
 				var segue = viewport.lastSegue; // could be a play segue
 				if (segue != undefined && sourceIndex == segue.source) {
 					// YAY Jackpot baby!
-					source.htmlElement.classList.remove("inactive");
+					source.htmlElement.classList.add("active");
 				} else if (segue != undefined && segue.type == "clear") {
-					_clearSource.classList.remove("inactive");
+					_clearSource.classList.add("active");
 				} else {
-					source.htmlElement.classList.add("inactive");
+					source.htmlElement.classList.remove("active");
 				}
 			});
 		});
 	};
 
+
+	this.initUI = function(blockSources){
+		_sourcesHeader = document.createElement('h2');
+		_sourcesList = document.createElement('div');
+		
+		blockSources.appendChild(_sourcesHeader);
+		blockSources.appendChild(_sourcesList);
+
+		_sourcesHeader.innerHTML = "Sources";
+
+		// Subscribe to events
+		loadTarget.addEventListener("presentationLoaded", function(ev){
+			// Renders the source list when the presentation is loaded
+			_this.render();
+		});
+
+		loadTarget.addEventListener("sourceRemoved", function(ev){
+			_this.render();
+		});
+
+		loadTarget.addEventListener("segueChanged", function(ev){
+			_this.positionChanged();
+		});
+
+		loadTarget.addEventListener("positionChanged", function(ev){
+			_this.positionChanged();
+		});
+	};
 }
