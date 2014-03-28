@@ -40,21 +40,28 @@ var Data = function (loadTarget) {
 	 * Loads the presentation into the loadTarget
 	 */
 	var _buildPresentation = function(presentationText){
+		var presentation = {info: {name: ""},sources:[],viewports:[]};
 		try{
-			var presentation = JSON.parse(presentationText);
+			var rawPresentation = JSON.parse(presentationText);
+			rawPresentation.sources.forEach(function(rawSource, idx){
+				rawSource.color = _this.colors[idx];
+				// TODO Wrap in a source object :D
+				presentation.sources.push(rawSource);
+			});
+			rawPresentation.viewports.forEach(function(rawViewport, idx){
+				var viewport = {lastSegue:{},segues:[]};
+				rawViewport.segues.forEach(function(rawSegue, idx){
+					// Fetches reference to the source for the segue
+					var source = presentation.sources[rawSegue.source];
+					var segue = new Segue(rawSegue, source)
+					viewport.segues.push(segue);
+				});
+				presentation.viewports.push(viewport);
+			});
 		} catch(e){
 			alert("Could not load presentation!\r\n- The format is invalid!");
 			return false;
 		}
-		// TODO Error handling. How does the JSON parser respond errors..?
-
-		// TODO Validation of the presentation element.
-		// 	- Ensure it is good for production.
-
-		// Assigning colors for the sources.
-		presentation.sources.forEach(function(s, idx){
-			s.color = _this.colors[idx];
-		});
 
 		// In the case there is a dialog, then dispose it.
 		_disposeFade();
@@ -309,7 +316,7 @@ var Data = function (loadTarget) {
 	 * Creates a new empty presentation and loads it
 	 */
 	this.create = function(){
-		_buildPresentation('{info: {name: ""},sources:[],viewports:[{lastSegue:{},segues:[],}]}');
+		_buildPresentation();
 	};
 
 	/*

@@ -194,7 +194,7 @@
 		min-width: 100%;
 		height:40px;
 	}
-	.timeline.over{
+	.timeline.dragover{
 		margin-bottom: 14px;
 		border-bottom: 1px solid white;
 	}

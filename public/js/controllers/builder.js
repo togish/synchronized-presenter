@@ -13,6 +13,7 @@
  */
 var Builder = function (containerElement) {
 	var _this = this;
+	window.bui = this;
 	var _containerElement = containerElement;
 
 	// Proxy methods for event subscribe, remove and dispatch
