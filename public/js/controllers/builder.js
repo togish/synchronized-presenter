@@ -44,6 +44,7 @@ var Builder = function (containerElement) {
 	this.load = function(presentation){
 		// Prepare the presentation
 		_this.presentation = presentation;
+		window.pres = presentation;
 
 		_this.dispatchEvent(new CustomEvent("presentationLoaded", true, true));
 	};

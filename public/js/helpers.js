@@ -54,7 +54,7 @@ var SecondsToTime = function(rest, cont, multi){
 		cont += ("" + nNum).length < 2 && cont.length > 0 ? "0"+nNum : ""+nNum;
 	}
 	// Continues the process
-	return SecondsToTime(cont, nRest, multi-1);
+	return SecondsToTime(nRest, cont, multi-1);
 };
 
 

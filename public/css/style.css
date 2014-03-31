@@ -209,13 +209,10 @@
 	.segue div, .segue span, .segue input, .segue a{
 		float: left;
 	}
-	.segue-clear{
-		border-left:5px solid white;
-	}
-	.segue-clear svg{
-		fill:white;
-	}
 
+	.segue-clear{
+		background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjQwIj4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMjIiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMTUiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCjwvc3ZnPg==);
+	}
 	.segue .offset-ajust{
 		background: rgba(255,255,255,0.3);
 		width:5px;
@@ -224,7 +221,9 @@
 		text-indent: -9000px;
 		cursor: e-resize;
 	}
-
+	.segue-clear .offset-ajust{
+		background: white;
+	}
 	.segue .value-sub, .segue .value-add, .segue .remove{
 		display: none;
 	}

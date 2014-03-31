@@ -68,14 +68,13 @@ var Timeline = function (loadTarget) {
 			_timelineContainer.removeChild(_timelineContainer.firstChild);	
 		}
 
+		// Adds and removed class for when a child is focused
 		_timelineContainer.addEventListener("segueFocused", function(){
 			_timelineContainer.classList.add("focused");
 		});
 		_timelineContainer.addEventListener("segueBlured", function(){
 			_timelineContainer.classList.add("focused");
 		});
-
-
 
 		// Value aligning the length of the timelines representation
 		var maxTimelineLength = 0;
@@ -101,7 +100,6 @@ var Timeline = function (loadTarget) {
 				e.dataTransfer.dropEffect = 'copy';
 				return false;
 			}, false);
-
 			// Adds and removes class for visual effects on the timeline
 			timelineElement.addEventListener('dragenter', function(e){
   				this.classList.add('dragover');
@@ -118,38 +116,40 @@ var Timeline = function (loadTarget) {
 				// Finds whether a clear segue is needed
 				var clearSeguePosition = viewport.segues.reduceRight(function(cont, value){
 					// If no solution has been found. Go check.
-					if (typeof cont == "undefined" && value.offset < position){
+					if (typeof cont == "undefined" && value.getOffset() < position){
 						// Gets the source for the segue
-						var previousSource = loadTarget.presentation.sources[value.source];
+						var previousSource = value.getSource();
 						// console.debug(previousSource);
 						// Calculates the endposition of the last segue.
-						var previousSegueEndPosition = value.offset + (previousSource.length - value.value);
+						var previousSegueEndPosition = value.getOffset() + value.getLength();
 						// returns the endposition if a clear segue is needed
 						return previousSource.timed && previousSegueEndPosition < position ? previousSegueEndPosition : false;
 					}
 					// Passes on the result
 					return cont;
 				}, undefined);
+				console.debug(clearSeguePosition);
 
 				// Fetches the dropped data
 				var transferData = e.dataTransfer.getData("text/plain");
 				
 				// Inserts a clearsegue if needed
 				if (typeof clearSeguePosition == "number" || transferData == "clear") {
-					viewport.segues.push({
+					viewport.segues.push(new Segue({
 						offset: (typeof clearSeguePosition == "number" ? clearSeguePosition : position),
 						action: "clear",
-					});
+					}));
 				} 
 
 				// If the segue dropped is a real source, add the segue
 				if (!isNaN(transferData)) {
-					viewport.segues.push({
+					var sourceIndex = parseInt(transferData);
+					viewport.segues.push(new Segue({
 						offset: position,
 						action: "play",
 						value: 0,
-						source: parseInt(transferData)
-					});
+						source: sourceIndex
+					}, loadTarget.presentation.sources[sourceIndex]));
 				}
 
 				// Order the segues by their offset.
@@ -165,37 +165,18 @@ var Timeline = function (loadTarget) {
 			viewport.htmlElement = timelineElement;
 			_timelineContainer.appendChild(timelineElement);
 
-
 			
 			// Adding content to the timeline
 			viewport.segues.forEach(function(segue, index, arr){
-				// TODO Handle the case where we are handling the last event.! What about the length and if it is rendered at all!
-				// The last one should be a stop marker! :D
-				var segueSource = loadTarget.presentation.sources[segue.source];
-				var isNotLast = index < arr.length-1;
-
-				// Find the length of the segue
-				if(isNotLast){
-					// Calculate the position based on the start of the next segue
-					var length = arr[index+1].offset - segue.offset;
-				} else if(sgSource != undefined && sgSource.timed){
-					// Special case where the source has its own time relation
-					var length = sgSource.length - segue.value;
-				} else {
-					// Just defaulting to 20 seconds
-					var length = 20;
-				}
-
-				var timelineLength = segue.offset + length;
-				if(!isNotLast && maxTimelineLength < timelineLength){
-					maxTimelineLength = timelineLength;
-				}
-
-				// Building the html dom element
-				// Should we delete the html object?? if(typeof segue.htmlElement != "undefined")
-				var sss = new Segue(segue, segueSource);
-				sss.initUI();
+				segue.initUI();
 				timelineElement.appendChild(segue.htmlElement);
+
+				// TODO Does not work on the videos..!
+				var len = segue.getLength();
+				if (len == -1){
+					len = index < arr.length-1 ? arr[index+1].getOffset() - segue.getOffset() : 20;
+				}
+				segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (len * _scale) +'px';
 			}, undefined);
 		});
 

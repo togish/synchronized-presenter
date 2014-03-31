@@ -43,25 +43,32 @@ var Data = function (loadTarget) {
 		var presentation = {info: {name: ""},sources:[],viewports:[]};
 		try{
 			var rawPresentation = JSON.parse(presentationText);
-			rawPresentation.sources.forEach(function(rawSource, idx){
-				rawSource.color = _this.colors[idx];
-				// TODO Wrap in a source object :D
-				presentation.sources.push(rawSource);
-			});
-			rawPresentation.viewports.forEach(function(rawViewport, idx){
-				var viewport = {lastSegue:{},segues:[]};
-				rawViewport.segues.forEach(function(rawSegue, idx){
-					// Fetches reference to the source for the segue
-					var source = presentation.sources[rawSegue.source];
-					var segue = new Segue(rawSegue, source)
-					viewport.segues.push(segue);
-				});
-				presentation.viewports.push(viewport);
-			});
 		} catch(e){
+			console.debug(e);
 			alert("Could not load presentation!\r\n- The format is invalid!");
 			return false;
 		}
+
+		var presentation = {
+			info: {name: ""},
+		};
+		presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
+			rawSource.color = _this.colors[idx];
+			// TODO Wrap in a source object :D
+			cont[idx] = rawSource;
+			return cont;
+		}, []);
+
+		presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
+			cont[idxViewport] = {
+				lastSegue:{}, 
+				segues: rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
+					cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source]);
+					return cont;
+				}, [])
+			};
+			return cont;
+		}, []);
 
 		// In the case there is a dialog, then dispose it.
 		_disposeFade();
@@ -89,7 +96,8 @@ var Data = function (loadTarget) {
 			clean.sources.push({
 				type: s.type,
 				title: s.title,
-				data: s.data,
+				url: s.url,
+				length: s.length,
 				// Length, color,,... What more?
 			});
 		});
