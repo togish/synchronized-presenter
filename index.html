@@ -1,29 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<!--link rel="stylesheet" href="/public/dist/css/bootstrap.css">
-		<link rel="stylesheet" href="/public/dist/css/bootstrap-theme.css"-->
-		<!-- script type="text/javascript" src="/public/dist/js/bootstrap.js"></script -->
+		<!-- Libraries -->
 		<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="aml20xwyo8s4qep"></script>
+		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
+		<script type="text/javascript" src="/public/lib/FileSaver.js"></script>
 		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>	
-
 		<script type="text/javascript" src="/public/lib/pdfjs/pdf.js"></script>	
 		<script type="text/javascript" src="/public/lib/pdfjs/generic/web/compatibility.js"></script>	
 
-		<script type="text/javascript" src="/public/js/players/youtube.js"></script>	
-		<script type="text/javascript" src="/public/js/players/slideshare.js"></script>	
-		<script type="text/javascript" src="/public/js/players/pdfjs.js"></script>	
-		<script type="text/javascript" src="/public/js/helpers.js"></script>	
-		<script type="text/javascript" src="/public/js/data.js"></script>	
-		<script type="text/javascript" src="/public/js/presentation.js"></script>	
+		
+		<script type="text/javascript" src="/public/js/helpers.js"></script>
 
-		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
+		<script type="text/javascript" src="/public/js/models/segue.js"></script>	
+
+		
+		<!-- Player modules -->
+		<script type="text/javascript" src="/public/js/viewers/players/slideshare.js"></script>	
+		<script type="text/javascript" src="/public/js/viewers/players/youtube.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/players/pdfjs.js"></script>
+
+		<!-- Managament modules -->
+		<script type="text/javascript" src="/public/js/viewers/data.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/sources.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/timeline.js"></script>
+
+		<script type="text/javascript" src="/public/js/controllers/builder.js"></script>
+		<script type="text/javascript" src="/public/js/controllers/presentation.js"></script>
 
 		<script type="text/javascript">
+		if(UrlParams.build != undefined){
+			function pageLoaded(){
+				var builder = new Builder(document.body);
+				builder.initUI();
+				builder.loadAuto();
+			};
+		} else {
 			// Callback to detect when the youtube api is loaded.
+			/*
 			function onYouTubeIframeAPIReady() {
 			}
-
 			var pres;
 			var ease;
 			function pageLoaded(){
@@ -73,7 +89,11 @@
 			// Dispatch events against the presentation element.
 
 			// Listen for events on the pres obj
+			*/
+			alert("Presenter er ikke lige i gang endnu..");
+		}
 		</script>
+		<link rel="stylesheet" href="public/css/style.css">
 		<style>
 			#viewport-container div.wrap{
 				float:left;
@@ -194,16 +214,8 @@
 			}
 
 		</style>
-		<link rel="stylesheet" href="public/css/style.css">
-		<!-- 
-			Loading the youtube js api
-			https://developers.google.com/youtube/js_api_reference
-		-->
-		<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
 	</head>
 	<body onload="pageLoaded();">
-
-
 		<div class="row" id="viewport-container"></div>
 
 		<div class="control-bar" id="control-bar">
@@ -228,4 +240,3 @@
 		</div>
 	</body>
 </html>
-
