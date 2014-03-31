@@ -8,6 +8,9 @@ var Segue = function (segue, source) {
 	// Scope rule hax
 	var _this = this;
 
+	console.debug(segue);
+	console.debug(source);
+
 	// TODO Define the types in constants
 
 	// State variables for the focus/blur management
@@ -125,6 +128,7 @@ var Segue = function (segue, source) {
 		var inputLen = _segueOffset.value.length;
 		_segueOffset.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 
+		if(!_this.hasSource()) return;
 		_segueValue.value = source.timed ? SecondsToTime(segue.value) : segue.value;
 		inputLen = _segueValue.value.length;
 		_segueValue.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;

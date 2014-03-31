@@ -128,12 +128,11 @@ var Timeline = function (loadTarget) {
 						// Calculates the endposition of the last segue.
 						var previousSegueEndPosition = value.getOffset() + value.getLength();
 						// returns the endposition if a clear segue is needed
-						return previousSource.timed && previousSegueEndPosition < position ? previousSegueEndPosition : false;
+						return typeof previousSource != "undefined" && previousSource.timed && previousSegueEndPosition < position ? previousSegueEndPosition : false;
 					}
 					// Passes on the result
 					return cont;
 				}, undefined);
-				console.debug(clearSeguePosition);
 
 				// Fetches the dropped data
 				var transferData = e.dataTransfer.getData("text/plain");
@@ -149,12 +148,15 @@ var Timeline = function (loadTarget) {
 				// If the segue dropped is a real source, add the segue
 				if (!isNaN(transferData)) {
 					var sourceIndex = parseInt(transferData);
-					viewport.segues.push(new Segue({
+					var source = loadTarget.presentation.sources[sourceIndex];
+					console.debug();
+					var sg = new Segue({
 						offset: position,
-						action: "play",
+						action: "playfrom",
 						value: 0,
 						source: sourceIndex
-					}, loadTarget.presentation.sources[sourceIndex]));
+					}, source);
+					viewport.segues.push(sg);
 				}
 
 				// Order the segues by their offset.
@@ -176,12 +178,14 @@ var Timeline = function (loadTarget) {
 				segue.initUI();
 				timelineElement.appendChild(segue.htmlElement);
 
-				// TODO Does not work on the videos..!
 				var len = segue.getLength();
-				if (len == -1){
-					len = index < arr.length-1 ? arr[index+1].getOffset() - segue.getOffset() : 20;
-				}
+				len = index < arr.length-1 ? arr[index+1].getOffset() - segue.getOffset() : len >= 0 ? len : 20;
 				segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (len * _scale) +'px';
+
+				var last = segue.getOffset() + len;
+				if (last > maxTimelineLength) {
+					maxTimelineLength = last;
+				};
 			}, undefined);
 		});
 
