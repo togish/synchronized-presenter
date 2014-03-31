@@ -112,6 +112,7 @@ var Builder = function (containerElement) {
 		// Initiates the timeline
 		var _timeline = new Timeline(_this);
 		_timeline.initUI(_blockTimeline);
+		window.tl = _timeline;
 
 		/****************************
 		 * 

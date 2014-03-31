@@ -47,9 +47,14 @@ var Timeline = function (loadTarget) {
 
 		loadTarget.addEventListener("positionChanged", function(ev){
 			// TODO Update the cursor
+			_this.render();
 		});
 
 		loadTarget.addEventListener("segueAdded", function(ev){
+			// TODO Update the cursor
+			_this.render();
+		});
+		loadTarget.addEventListener("segueChanged", function(ev){
 			// TODO Update the cursor
 			_this.render();
 		});

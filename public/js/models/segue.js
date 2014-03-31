@@ -20,6 +20,19 @@ var Segue = function (segue, source) {
 	var _segueValue;
 	var _segueOffset;
 
+	var _focus = function(show){
+		_isFocused = show;
+		_this.htmlElement.classList.remove("focus-offset");
+		_this.htmlElement.classList.remove("focus-value");
+		if(show === false){
+			_this.htmlElement.dispatchEvent(new CustomEvent("segueBlured"));
+		} else {
+			_this.htmlElement.classList.add("focus-"+show);
+			_this.htmlElement.dispatchEvent(new CustomEvent("segueFocused"));
+		}
+	};
+
+
 	// Returns the type of the segue
 	this.getType = function(){
 		return segue.type;
@@ -56,43 +69,17 @@ var Segue = function (segue, source) {
 		}
 
 		// Save the current value as a fallback for invalid input
-		var value = segue.value;
-		
-		// For string representation. Parse and convert into seconds
-		if(typeof input == "string"){
-			var newValue = null;
-			var multiplier = [1, 60, 3600, 86400];
-			// I know fucking regular expressions! bitches!
-			newValue = source.timed ? input.match(/[0-9]+\:[0-5][0-9]/) : input.match(/[1-9][0-9]?|^[0]$/);
-			// console.debug(newValue);
-			if(!(newValue == null || newValue.length > 1)){
-				// Set the value in the segue. Convert to seconds or slidenumber. Works either case.
-				var value = newValue[0].split(":").reduceRight(function(cont, val, idx, arr){
-					return cont + multiplier[arr.length - idx -1] * val;
-				}, 0);
-			}
-		// For a number. Go ahead!
-		} else if(typeof input == "number"){
-			value = input;
-		}
+		var newValue = SomethingToSeconds(input, source.timed);
 
 		// Checks if possible to perform the change
 		var ret = false;
-		if(0 <= value && value < source.length){
-			segue.value = value;
+		if(typeof newValue != "undefined" && 0 <= newValue && newValue < source.length){
+			segue.value = newValue;
 			ret = true;
 		}
 
 		// Build the string representation of the value
 		_this.updateUI();
-
-		// Update the length of the segue on timed sources
-		// TODO What is this shit!
-		// if(sgSource.timed){
-		// 	var length = sgSource.length - segue.value;
-		// 	segueElement.style.width = ''+length*5+'px';
-		// }
-
 		_this.htmlElement.dispatchEvent(new CustomEvent("segueChanged"));
 		return ret;
 	};
@@ -103,7 +90,21 @@ var Segue = function (segue, source) {
 
 
 	this.ajustOffset = function(input){
-		// TODO!
+		// Save the current value as a fallback for invalid input
+		var newValue = SomethingToSeconds(input);
+
+		// Checks if possible to perform the change
+		var ret = false;
+		if(typeof newValue != "undefined" && 0 <= newValue){
+			segue.offset = newValue;
+			ret = true;
+		}
+
+		// Build the string representation of the value
+		_this.updateUI();
+		_this.htmlElement.dispatchEvent(new CustomEvent("segueChanged"), true);
+		return ret;
+
 	};
 	
 	this.ajustOffsetRelative = function(input){
@@ -114,19 +115,6 @@ var Segue = function (segue, source) {
 		_this.htmlElement.remove();
 		// arr.splice(index, 1); WHAT THE FUCK!
 		// Fire event
-	};
-
-	// TODO This needs fucking cleanup!! U get it!
-	this.focus = function(show){
-		_isFocused = show;
-		_this.htmlElement.classList.remove("focus-offset");
-		_this.htmlElement.classList.remove("focus-value");
-		if(show === false){
-			_this.htmlElement.dispatchEvent(new CustomEvent("segueBlured"));
-		} else {
-			_this.htmlElement.classList.add("focus-"+show);
-			_this.htmlElement.dispatchEvent(new CustomEvent("segueFocused"));
-		}
 	};
 
 	this.updateUI = function(){
@@ -156,149 +144,84 @@ var Segue = function (segue, source) {
 			_isMouseOver = false;
 			// Hide if needed
 			if(!_isFocusedInput){
-				_this.focus(false);
+				_focus(false);
 			}
 		});
 		// Adds click listner for showing the buttons
 		_this.htmlElement.addEventListener("click", function(e){
-			console.debug(e);
-			if(segue.action != "clear"){
-				_segueValue.focus();
-			} else {
-				// Default to the offset ajustment if nothing else is avaliable
+			if(segue.action == "clear"){
 				_segueOffset.focus();
+			} else {
+				_segueValue.focus();
 			}
 		});
 
+		var addBlock = function(classType, relativeCallback, absoluteCallback){
+			// Builds the offset ajustment block
+			var container = document.createElement('div');
+			container.className = "ajust-"+classType;
+			container.addEventListener("click", function(e){
+				e.stopPropagation();
+				input.focus();
+			});
 
-		
-		// Builds the offset ajustment block
-		var offsetAjust = document.createElement('div');
-		offsetAjust.className = "offset-ajust";
-		offsetAjust.addEventListener("click", function(e){
-			e.stopPropagation();
-			console.debug(e);
-			_this.focus("offset");
-			_segueOffset.focus();
-		});
-
-
-		// Adds offset substraction button
-		var offsetSub = document.createElement('a');
-		offsetSub.className = "offset-sub";
-		offsetSub.innerHTML = "-";
-		offsetSub.addEventListener('click', function(e){
-			e.preventDefault();
-			_this.ajustOffsetRelative(-1);
-		});
-		offsetAjust.appendChild(offsetSub);
-
-		// Building html element for the value enter field
-		_segueOffset = document.createElement('input');
-		_segueOffset.type = "text";
-
-		// Marks the segue as focused as the working element
-		_segueOffset.addEventListener("focus", function(e){
-			_isFocusedInput = true;
-			_this.focus("offset");
-		});
-		
-		// Attach on focus leave listner for the 
-		_segueOffset.addEventListener("blur", function(e){
-			// Tries to execute a value update
-			_isFocusedInput = false;
-			_this.ajustOffset(_segueOffset.value);
-			if(!_isMouseOver){
-				_this.focus(false);
-			}
-		}, false);
-
-		// Handles enter presses for ending the edit
-		_segueOffset.addEventListener("keyup", function(e){
-			if(e.keyCode == 13){
+			// Adds offset substraction button
+			var sub = document.createElement('a');
+			sub.className = "sub";
+			sub.innerHTML = "-";
+			sub.addEventListener('click', function(e){
+				e.stopPropagation();
 				e.preventDefault();
-				_segueOffset.blur();
-			}
-		});
-		offsetAjust.appendChild(_segueOffset);
+				relativeCallback(-1);
+			});
+			container.appendChild(sub);
 
-		// Building html element for the value ajust add
-		var offsetAdd = document.createElement('a');
-		offsetAdd.className = "offset-add";
-		offsetAdd.innerHTML = "+";
-		offsetAdd.addEventListener('click', function(e){
-			e.preventDefault();
-			_this.ajustOffsetRelative(1);
-		});
-		offsetAjust.appendChild(offsetAdd);
-		_this.htmlElement.appendChild(offsetAjust);
+			// Building html element for the value enter field
+			var input = document.createElement('input');
+			input.type = "text";
+			input.addEventListener("focus", function(e){
+				_isFocusedInput = true;
+				_focus(classType);
+			});
+			input.addEventListener("blur", function(e){
+				// Tries to execute a value update
+				 _isFocusedInput = false;
+				absoluteCallback(input.value);
+				if(!_isMouseOver){
+					_focus(false);
+				}
+			});
+			input.addEventListener("keyup", function(e){
+				if(e.keyCode == 13){
+					e.preventDefault();
+					input.blur();
+				}
+			});
+			container.appendChild(input);
 
+			// Building html element for the value ajust add
+			var add = document.createElement('a');
+			add.className = "add";
+			add.innerHTML = "+";
+			add.addEventListener('click', function(e){
+				e.stopPropagation();
+				e.preventDefault();
+
+				relativeCallback(1);
+			});
+			container.appendChild(add);
+			_this.htmlElement.appendChild(container);
+			return input;
+		};
+
+		_segueOffset = addBlock("offset", _this.ajustOffsetRelative, _this.ajustOffset);
 
 		// If a segue with a value. Then add input for that.
 		if(segue.action != "clear"){
 			// Sets the color of the segue according to the source color
-			_this.htmlElement.style.background = source.color;
-
-			// Builds the offset ajustment bar
-			var valueAjust = document.createElement('div');
-			valueAjust.className = "value-ajust";
-			valueAjust.addEventListener("click", function(e){
-				console.debug(e);
-				_segueValue.focus();
-			});
-
-
-			// Building html element for the value ajust substract
-			var valueSub = document.createElement('a');
-			valueSub.className = "focused-visible value-sub";
-			valueSub.innerHTML = "-";
-			valueSub.addEventListener('click', function(e){
-				e.preventDefault();
-				_this.ajustValueRelative(-1);
-			});
-			valueAjust.appendChild(valueSub);
-
-			// Building html element for the value enter field
-			_segueValue = document.createElement('input');
-			_segueValue.type = "text";
-
-			// Marks the segue as focused as the working element
-			_segueValue.addEventListener("focus", function(e){
-				_isFocusedInput = true;
-				_this.focus("value");
-			});
-
-			// Attach on focus leave listner for the 
-			_segueValue.addEventListener("blur", function(e){
-				// Tries to execute a value update
-				_isFocusedInput = false;
-				_this.ajustValue(_segueValue.value);
-				if(!_isMouseOver){
-					_this.focus(false);
-				}
-			}, false);
-	
-			// Handles enter presses for ending the edit
-			_segueValue.addEventListener("keyup", function(e){
-				if(e.keyCode == 13){
-					e.preventDefault();
-					_segueValue.blur();
-				}
-			});
-			valueAjust.appendChild(_segueValue);
-
-			// Building html element for the value ajust add
-			var valueAdd = document.createElement('a');
-			valueAdd.className = "value-add";
-			valueAdd.innerHTML = "+";
-			valueAdd.addEventListener('click', function(e){
-				e.preventDefault();
-				_this.ajustValueRelative(1);
-			});
-			valueAjust.appendChild(valueAdd);
-			_this.htmlElement.appendChild(valueAjust);
+			_this.htmlElement.style.backgroundColor = source.color;
+			_segueValue = addBlock("value", _this.ajustValueRelative, _this.ajustValue);
 		}
-
 
 		// Building html element for the delete segue
 		var segueDelete = document.createElement('a');

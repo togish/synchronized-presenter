@@ -57,6 +57,27 @@ var SecondsToTime = function(rest, cont, multi){
 	return SecondsToTime(nRest, cont, multi-1);
 };
 
+var SomethingToSeconds = function(input, timed){
+	// For string representation. Parse and convert into seconds
+	if(typeof input == "string"){
+		var newValue = null;
+		var multiplier = [1, 60, 3600, 86400];
+		// I know fucking regular expressions! bitches!
+		newValue = timed ? input.match(/[0-9]+\:[0-5][0-9]/) : input.match(/[1-9][0-9]?|^[0]$/);
+		// console.debug(newValue);
+		if(!(newValue == null || newValue.length > 1)){
+			// Set the value in the segue. Convert to seconds or slidenumber. Works either case.
+			return newValue[0].split(":").reduceRight(function(cont, val, idx, arr){
+				return cont + multiplier[arr.length - idx -1] * val;
+			}, 0);
+		}
+	// For a number. Go ahead!
+	} else if(typeof input == "number"){
+		return input;
+	}
+};
+
+
 
 // Taken from:
 // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill

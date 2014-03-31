@@ -183,9 +183,6 @@
 	.segue div, .segue span, .segue input, .segue a{
 		float: left;
 	}
-	.segue .offset-ajust a{
-		cursor: pointer;
-	}
 	.segue .remove{
 		float:right;
 	}
@@ -206,25 +203,43 @@
 	.segue-clear{
 		background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjQwIj4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMjIiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMTUiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCjwvc3ZnPg==);
 	}
-	.segue .offset-ajust{
+	.segue .ajust-offset{
 		background: rgba(255,255,255,0.3);
-		min-width:5px;
+		width:0;
 		height:100%;
 		display:block;
 		cursor: e-resize;
+		overflow: hidden;
+		padding-left:5px;
 	}
-	.segue.focused-offset .offset-ajust{
+	.segue .ajust-offset a{
+		cursor: pointer;
+	}
+	/*
+	.segue .ajust-offset a.add{
+		background: no-repeat url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiB4PSIxNSIgeT0iMCIgc3R5bGU9ImZpbGw6I0ZGRkZGRjsiIC8+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjEwIiB4PSIwIiB5PSIxNSIgc3R5bGU9ImZpbGw6I0ZGRkZGRjsiIC8+PC9zdmc+);
+		text-indent: -9000px;
+		background-size: contain;
+		background-position: center;
+	}
+	.segue .ajust-offset a.sub{
+		background: no-repeat url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCI+PHJlY3Qgd2lkdGg9IjEwIiBoZWlnaHQ9IjQwIiB4PSIxNSIgeT0iMCIgc3R5bGU9ImZpbGw6I0ZGRkZGRjsiIC8+PHJlY3Qgd2lkdGg9IjQwIiBoZWlnaHQ9IjEwIiB4PSIwIiB5PSIxNSIgc3R5bGU9ImZpbGw6I0ZGRkZGRjsiIC8+PC9zdmc+);
+	}*/
+
+	.segue.focus-offset .ajust-offset{
 		width:auto;
 	}
-	.segue-clear .offset-ajust{
+	.segue-clear .ajust-offset{
 		background: white;
 	}
-	.segue .offset-ajust input,	.segue .offset-ajust a, .segue .value-ajust a, .segue .remove{
+	.segue .ajust-offset input{
+
+	}
+	.segue .ajust-offset a, .segue .ajust-value a, .segue .remove{
 		display: none;
 	}
-
-	.segue.focus-offset .offset-ajust a, .segue.focus-offset .offset-ajust input,
-	.segue.focus-value .value-ajust a,
+	.segue.focus-offset .ajust-offset a, .segue.focus-offset .ajust-offset input,
+	.segue.focus-value .ajust-value a,
 	.segue.focus-value .remove, .segue.focus-offset .remove {
 		display: inline-block !important;
 	}
