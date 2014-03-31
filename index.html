@@ -29,13 +29,12 @@
 		<script type="text/javascript" src="/public/js/controllers/presentation.js"></script>
 
 		<script type="text/javascript">
-		if(UrlParams.build != undefined){
-			function pageLoaded(){
+		function pageLoaded(){
+			if(UrlParams.build != undefined){
 				var builder = new Builder(document.body);
 				builder.initUI();
 				builder.loadAuto();
-			};
-		} else {
+			} else {
 			// Callback to detect when the youtube api is loaded.
 			/*
 			function onYouTubeIframeAPIReady() {
@@ -90,8 +89,9 @@
 
 			// Listen for events on the pres obj
 			*/
-			alert("Presenter er ikke lige i gang endnu..");
-		}
+				alert("Presenter er ikke lige i gang endnu..");
+			}
+		};
 		</script>
 		<link rel="stylesheet" href="public/css/style.css">
 		<style>
@@ -100,8 +100,6 @@
 				width:50%;
 				height:540px;
 			}
-
-
 
 			.progress{
 				overflow: hidden;
@@ -125,8 +123,6 @@
 				background-color: red;
 				float: right;
 			}
-			
-
 
 
 			.control-bar{

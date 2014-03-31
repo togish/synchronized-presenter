@@ -8,11 +8,6 @@ var Segue = function (segue, source) {
 	// Scope rule hax
 	var _this = this;
 
-	console.debug(segue);
-	console.debug(source);
-
-	// TODO Define the types in constants
-
 	// State variables for the focus/blur management
 	var _isFocused = false;
 	var _isFocusedInput = false;
