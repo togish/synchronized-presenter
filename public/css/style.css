@@ -141,33 +141,6 @@
 
 	}
 
-	/* block segue additions */
-	.block-segue{
-		font-size:16px;
-	}
-	.block-segue span{
-		float: right;
-	}
-	.block-segue table{
-		clear:both;
-		width: 100%;
-	}
-	.block-segue tr.action td:last-child{
-		text-align: right;
-	}
-	.block-segue input[type=radio] {
-		display: none;
-	}
-	.block-segue input[type=radio] + label {
-		display:inline-block;
-		padding: 0 12px;
-		cursor:pointer;
-	}
-	.block-segue input[type=radio]:checked + label { 
-		background-image: none;
-		background-color: rgba(0,0,0,0.4);
-	}
-
 	/* block timeline add */
 	.block-timeline .timeline-list {
 		float:left;
@@ -200,6 +173,7 @@
 	}
 
 
+
 	.segue{
 		float: left;
 		cursor: pointer;
@@ -209,30 +183,11 @@
 	.segue div, .segue span, .segue input, .segue a{
 		float: left;
 	}
-
-	.segue-clear{
-		background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjQwIj4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMjIiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMTUiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCjwvc3ZnPg==);
+	.segue .offset-ajust a{
+		cursor: pointer;
 	}
-	.segue .offset-ajust{
-		background: rgba(255,255,255,0.3);
-		width:5px;
-		height:100%;
-		display:block;
-		text-indent: -9000px;
-		cursor: e-resize;
-	}
-	.segue-clear .offset-ajust{
-		background: white;
-	}
-	.segue .value-sub, .segue .value-add, .segue .remove{
-		display: none;
-	}
-	.segue.focused .value-sub, .segue.focused .value-add, .segue.focused .remove{
-		display: block;
-	}
-	.segue .value-sub{
-	}
-	.segue .value-add{
+	.segue .remove{
+		float:right;
 	}
 	.segue input[type=text]{
 		display: block;
@@ -248,26 +203,40 @@
 		font-family:verdana;
 		outline: none;
 	}
-	
-	/* greys out all other segues */
-	.timeline-container.focused .segue:not(.focused){
-		background:gray !important;
+	.segue-clear{
+		background: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxIiBoZWlnaHQ9IjQwIj4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMjIiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCiAgPHJlY3Qgd2lkdGg9IjEiIGhlaWdodD0iMyIgeD0iMCIgeT0iMTUiIHN0eWxlPSJmaWxsOndoaXRlOyIgLz4NCjwvc3ZnPg==);
 	}
-	/* style for the tooltip */
-	.segue .tooltip {
-		background: blue;
-		color: white;
+	.segue .offset-ajust{
+		background: rgba(255,255,255,0.3);
+		min-width:5px;
+		height:100%;
+		display:block;
+		cursor: e-resize;
+	}
+	.segue.focused-offset .offset-ajust{
+		width:auto;
+	}
+	.segue-clear .offset-ajust{
+		background: white;
+	}
+	.segue .offset-ajust input,	.segue .offset-ajust a, .segue .value-ajust a, .segue .remove{
 		display: none;
 	}
 
+	.segue.focus-offset .offset-ajust a, .segue.focus-offset .offset-ajust input,
+	.segue.focus-value .value-ajust a,
+	.segue.focus-value .remove, .segue.focus-offset .remove {
+		display: inline-block !important;
+	}
+	.timeline-container.focused .segue:not(.focus-offset, .focus-value){
+		background:gray !important;
+	}
 	/* changes behaviour of the focused segue*/
-	.segue.focused {
+	.segue.focus-value, .segue.focus-offset {
 		width:auto !important;
 	}
-	/* dependent style for the tooltip */
-	.segue.focused .tooltip {
-		display:inline-block;
-	}
+
+
 
 
 
