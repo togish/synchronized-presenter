@@ -58,7 +58,10 @@ var Timeline = function (loadTarget) {
 			// TODO Update the cursor
 			_this.render();
 		});
-
+		loadTarget.addEventListener("viewportAdded", function(ev){
+			// TODO Update the cursor
+			_this.render();
+		});
 		// Maybe we should catch this.. :D
 		// loadTarget.dispatchEvent(new CustomEvent("segueChanged"));
 	};
@@ -89,6 +92,14 @@ var Timeline = function (loadTarget) {
 			// Add the viewport to the viewport list
 			var nameElement = document.createElement('div');
 			nameElement.innerHTML = '' + index;
+			var removeBtn = document.createElement('a');
+			removeBtn.innerHTML = 'X';
+			removeBtn.addEventListener('click', function(e){
+				e.preventDefault();
+				loadTarget.presentation.viewports.splice(index,1);
+				loadTarget.dispatchEvent(new CustomEvent("viewportAdded"));
+			});
+			nameElement.appendChild(removeBtn);
 			_timelineList.appendChild(nameElement);
 
 			// Add the timeline, it is the segue container
@@ -189,9 +200,16 @@ var Timeline = function (loadTarget) {
 			}, undefined);
 		});
 
-
 		loadTarget.presentation.viewports.forEach(function(viewport, index){
 			viewport.htmlElement.style.width = '' + (maxTimelineLength + 50) * 5 + 'px';
 		});
+
+		var addViewport = document.createElement('button');
+		addViewport.innerHTML = "+";
+		addViewport.addEventListener('click',function(){
+			loadTarget.presentation.viewports.push({segues:[]});
+			loadTarget.dispatchEvent(new CustomEvent("viewportAdded"));
+		});
+		_timelineList.appendChild(addViewport);
 	}
 };
