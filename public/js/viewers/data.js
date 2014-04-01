@@ -46,7 +46,7 @@ var Data = function (loadTarget) {
 			viewports:[{segues:[]}]
 		};
 		
-		if(typeof rawPresentation != "undefined"){
+		if(typeof presentationText != "undefined"){
 			try{
 				var rawPresentation = JSON.parse(presentationText);
 			} catch(e){
@@ -95,18 +95,18 @@ var Data = function (loadTarget) {
 		// Preparing the clean presentation
 		var clean ={};
 		clean.title = loadTarget.presentation.title;
-		clean.sources = [];
-		clean.viewports = [];
-		loadTarget.presentation.sources.forEach(function(s){
-			clean.sources.push({
+		clean.sources = loadTarget.presentation.sources.reduce(function(cont, s, idx){
+			cont[idx] = {
 				type: s.type,
 				title: s.title,
 				timed: s.timed,
 				url: s.url,
 				length: s.length,
 				// Length, color,,... What more?
-			});
-		});
+			};
+			return cont;
+		}, []);
+		clean.viewports = [];
 		loadTarget.presentation.viewports.forEach(function(v){
 			var sgs = [];
 			v.segues.forEach(function(s){
@@ -128,7 +128,9 @@ var Data = function (loadTarget) {
 				segues: sgs,
 			});
 		});
-		return JSON.stringify(clean);
+		var str = JSON.stringify(clean);
+		console.debug(str);
+		return str;
 	};
 	
 	/*
