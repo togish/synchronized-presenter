@@ -111,9 +111,11 @@ var Builder = function (containerElement) {
 		titleInput.addEventListener('blur', function(e){
 			if(typeof _this.presentation != "undefined"){
 				_this.presentation.title = titleInput.value;
+				console.debug("title set to: " + _this.presentation.title);
 			}
 		});
 		_this.addEventListener('presentationLoaded', function(){
+			console.debug("ready for title");
 			titleInput.value = _this.presentation.title;
 		});
 		_blockHeader.appendChild(titleInput);

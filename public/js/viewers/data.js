@@ -54,6 +54,9 @@ var Data = function (loadTarget) {
 				alert("Could not load presentation!\r\n- The format is invalid!");
 				return false;
 			}
+			presentation = {
+				title: rawPresentation.title
+			};
 			presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
 				rawSource.color = _this.colors[idx];
 				// TODO Wrap in a source object :D
@@ -91,7 +94,7 @@ var Data = function (loadTarget) {
 
 		// Preparing the clean presentation
 		var clean ={};
-		clean.info = loadTarget.presentation.info;
+		clean.title = loadTarget.presentation.title;
 		clean.sources = [];
 		clean.viewports = [];
 		loadTarget.presentation.sources.forEach(function(s){
@@ -248,7 +251,7 @@ var Data = function (loadTarget) {
 	 */
 	this.saveDialog = function(){
 		var presentation = _cleanPresentation();
-		var filename = presentation.name + ".json";
+		var filename = loadTarget.presentation.title + ".json";
 
 		// Holds the save destinations
 		var sinks = [];
@@ -258,7 +261,7 @@ var Data = function (loadTarget) {
 		btnFile.innerHTML = "Save to file";
 		btnFile.addEventListener('click', function(e){
 			e.preventDefault();
-			var blob = new Blob([pres], {type: "text/json;charset=utf-8"});
+			var blob = new Blob([presentation], {type: "text/json;charset=utf-8"});
 			saveAs(blob, filename);
 		});
 		sinks.push({
@@ -268,7 +271,7 @@ var Data = function (loadTarget) {
 
 		// Building save to dropbox shit
 		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
-			var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(pres), filename);
+			var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(presentation), filename);
 			sinks.push({
 				text: "Dropbox:",
 				button: btnDropbox
