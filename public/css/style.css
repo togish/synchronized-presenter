@@ -92,6 +92,16 @@
 	}
 
 
+	.block-header input{
+		background: none;
+		border: none;
+		color: white;
+		line-height: 40px;
+		font-size: 2em;
+		font-weight: bold;
+	}
+
+
 	.block-viewport .viewport{
 		float:left;
 	}
@@ -237,7 +247,7 @@
 		width:auto;
 	}
 	.segue-clear .ajust-offset{
-		background: white;
+		background: #888;
 	}
 	.segue .ajust-offset input{
 

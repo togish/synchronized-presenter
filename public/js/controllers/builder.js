@@ -21,7 +21,7 @@ var Builder = function (containerElement) {
 	this.dispatchEvent = function(a){_containerElement.dispatchEvent(a);};
 	this.removeEventListener = function(a,b,c){_containerElement.removeEventListener(a,b,c);};
 
-	this.presentation = {};
+	this.presentation = undefined;
 
 	/****************************
 	 * Tries to auto load the presentation dependent on the url parmeters
@@ -33,6 +33,7 @@ var Builder = function (containerElement) {
 		} else if(UrlParams.url != undefined){
 			data.load(UrlParams.url);
 		} else {
+			data.create();
 			return false;
 		}
 		return true;
@@ -48,7 +49,6 @@ var Builder = function (containerElement) {
 
 		_this.dispatchEvent(new CustomEvent("presentationLoaded", true, true));
 	};
-
 
 	// _containerElement.dispatchEvent(new Event(_this.EVENT_STATUS, {bubbles:true,cancelable:true}));
 
@@ -98,8 +98,25 @@ var Builder = function (containerElement) {
 		 */
 		 
 		// TODO Set up listner for changes in the field and for changes from the presentation.
-		_blockHeader.innerHTML = '<h1>Yay title</h1>';
-		// _blockHeader.innerHTML = '<h1>' + _this.presentation.info.name + '</h1>';
+
+		var titleInput = document.createElement('input');
+		titleInput.type = 'text';
+		titleInput.placeholder = 'Enter title here....';
+		titleInput.addEventListener('keyup', function(e){
+				if(e.keyCode == 13){
+					e.preventDefault();
+					titleInput.blur();
+				}
+		});
+		titleInput.addEventListener('blur', function(e){
+			if(typeof _this.presentation != "undefined"){
+				_this.presentation.title = titleInput.value;
+			}
+		});
+		_this.addEventListener('presentationLoaded', function(){
+			titleInput.value = _this.presentation.title;
+		});
+		_blockHeader.appendChild(titleInput);
 
 		// Initiates the data object
 		var _data = new Data(_this);

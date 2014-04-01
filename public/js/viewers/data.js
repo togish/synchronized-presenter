@@ -40,34 +40,37 @@ var Data = function (loadTarget) {
 	 * Loads the presentation into the loadTarget
 	 */
 	var _buildPresentation = function(presentationText){
-		var presentation = {info: {name: ""},sources:[],viewports:[]};
-		try{
-			var rawPresentation = JSON.parse(presentationText);
-		} catch(e){
-			console.debug(e);
-			alert("Could not load presentation!\r\n- The format is invalid!");
-			return false;
-		}
-
 		var presentation = {
-			info: {name: ""},
+			title: "",
+			sources:[],
+			viewports:[{segues:[]}]
 		};
-		presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
-			rawSource.color = _this.colors[idx];
-			// TODO Wrap in a source object :D
-			cont[idx] = rawSource;
-			return cont;
-		}, []);
-
-		presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
-			cont[idxViewport] = {
-				segues: rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
-					cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source]);
-					return cont;
-				}, [])
-			};
-			return cont;
-		}, []);
+		
+		if(typeof rawPresentation != "undefined"){
+			try{
+				var rawPresentation = JSON.parse(presentationText);
+			} catch(e){
+				console.debug(e);
+				alert("Could not load presentation!\r\n- The format is invalid!");
+				return false;
+			}
+			presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
+				rawSource.color = _this.colors[idx];
+				// TODO Wrap in a source object :D
+				cont[idx] = rawSource;
+				return cont;
+			}, []);
+	
+			presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
+				cont[idxViewport] = {
+					segues: rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
+						cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source]);
+						return cont;
+					}, [])
+				};
+				return cont;
+			}, []);
+		}
 
 		// In the case there is a dialog, then dispose it.
 		_disposeFade();
@@ -245,7 +248,7 @@ var Data = function (loadTarget) {
 	 */
 	this.saveDialog = function(){
 		var presentation = _cleanPresentation();
-		var filename = presentation.info.name + ".json";
+		var filename = presentation.name + ".json";
 
 		// Holds the save destinations
 		var sinks = [];
