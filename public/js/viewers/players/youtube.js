@@ -49,6 +49,8 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 	// When the player is executing playback
 	this.PLAYING = 'playing';
 
+	this.htmlElement = targetElement;
+
 	var _this = this;
 	var _duration = 0;
 	var _status;
@@ -57,12 +59,23 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 	var _player;
 	var _readyMetadata = false;
 	var _readyVideo = false;
+	var _ratio = 16/9;
+	var _playerElement;
 
 	var updateStatus = function (status) {
 		if (_status == status) return false;
 		_status = status;
 		callback(_this, _status);
 		return true;
+	};
+
+	this.getRatio = function(){
+		return _ratio;
+	};
+	this.setSize = function(height){
+		var frame = _player.a;
+		frame.height = height;
+		frame.width = height * _ratio;
 	};
 
 	// Returns true if the resource is using timestamps
@@ -114,16 +127,19 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 
 	this.init = function(){
 		updateStatus(_this.LOADING);
-		_videoId = YouTubeHelpers.parseUrl(resource.data.url);
+		_videoId = YouTubeHelpers.parseUrl(resource.url);
 	
 		YouTubeHelpers.loadMetadata(_videoId, function(data){
 			_duration = data.duration;
+			_ratio = typeof data.aspectRatio == "string" && data.aspectRatio == "widescreen"?16/9:4/3;
 			_readyMetadata = true;
 			callbackTryReady();
 		});
 
 		// Construct the player
-		_player = new YT.Player(targetElement, {
+		_playerElement = document.createElement('div');
+		targetElement.appendChild(_playerElement);
+		_player = new YT.Player(_playerElement, {
 			height: '360', // TODO Detect the size of the viewport!
 			width: '640',
 			videoId: _videoId,

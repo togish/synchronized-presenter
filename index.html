@@ -3,6 +3,8 @@
 	<head>
 		<!-- Libraries -->
 		<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="aml20xwyo8s4qep"></script>
+		<!--  Loading the youtube js api: https://developers.google.com/youtube/js_api_reference-->
+		<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
 		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
 		<script type="text/javascript" src="/public/lib/FileSaver.js"></script>
 		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>	
@@ -12,8 +14,9 @@
 		
 		<script type="text/javascript" src="/public/js/helpers.js"></script>
 
+		<!-- Model classes -->
 		<script type="text/javascript" src="/public/js/models/segue.js"></script>	
-
+		<script type="text/javascript" src="/public/js/models/source.js"></script>	
 		
 		<!-- Player modules -->
 		<script type="text/javascript" src="/public/js/viewers/players/slideshare.js"></script>	
@@ -35,204 +38,18 @@
 				builder.initUI();
 				builder.loadAuto();
 			} else {
-			// Callback to detect when the youtube api is loaded.
-			/*
-			function onYouTubeIframeAPIReady() {
-			}
-			var pres;
-			var ease;
-			function pageLoaded(){
-				var presele = document.getElementById("viewport-container");
-				var ctrlbar = document.getElementById("control-bar");
-				pres = new Presentation(presele);
-
-				var pgbar = document.getElementById("presentation-progress");
-				ease = function(to, time){
-					pgbar.style["-webkit-transition"] = "width "+time+"s linear";
-					pgbar.style.transition = "width "+time+"s linear";
-					pgbar.style.width = to + "%";
+				function onYouTubeIframeAPIReady() {
+					console.debug("YT Ready");
 				}
-
-				pres.addEventListener(pres.EVENT_STATUS, function(e){
-					console.log("TOP: " + pres.getStatus());
-
-					var percent = pres.getCompletedPercent();
-					
-					ctrlbar.classList.remove("ready");
-					ctrlbar.classList.remove("playing");
-					
-					ease(percent, 0);
-
-					//if(pres.getStatus() == pres.LOADING || pres.getStatus() == pres.ERROR){} else
-					// || pres.getStatus() == pres.CUED
-
-					if(pres.getStatus() == pres.READY){
-						// ease(percent, percent, 0);
-						ctrlbar.classList.add("ready");
-					}
-					else if(pres.getStatus() == pres.PLAYING){
-						ctrlbar.classList.add("playing");
-						ease(100, pres.getDuration() - pres.getPosition());
-					}
-				}, false);
-
-				pres.addEventListener(pres.EVENT_DURATION, function(e){
-					console.log("UI EVENT_DURATION changed to: " + pres.getDuration());
-					// Do only use this for the timestamp update
-				}, false);
-
+				var pres = new Presenter(document.body);
+				window.pp = pres;
+				pres.initUI();
 				pres.loadAuto();
-			}
-
-			// Listen for events from elements in ui.
-			// Dispatch events against the presentation element.
-
-			// Listen for events on the pres obj
-			*/
-				alert("Presenter er ikke lige i gang endnu..");
 			}
 		};
 		</script>
-		<link rel="stylesheet" href="public/css/style.css">
-		<style>
-			#viewport-container div.wrap{
-				float:left;
-				width:50%;
-				height:540px;
-			}
-
-			.progress{
-				overflow: hidden;
-				background-color: #666;
-			}
-
-			.progress-bar{
-				float: left;
-				width: 0;
-				height: 100%;
-				color: #fff;
-				background-color: #66A8CC;
-				-webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .15);
-				box-shadow: inset 0 -1px 0 rgba(0, 0, 0, .15);
-			}
-			.progress-bar:after{
-				content:'';
-				width:2px;
-				display:block;
-				height:100%;
-				background-color: red;
-				float: right;
-			}
-
-
-			.control-bar{
-				clear:both;
-				background:#051d31;
-				color: white;
-				height:50px;
-				position:absolute;
-				bottom:0;
-				right:0;
-				left:0;
-			}
-			.control-bar div, .control-bar button{
-				border:none;
-				float:left;
-				height:100%;
-				color: #428bca;
-			}
-			.control-bar button{
-				background:none;
-				padding:10px;
-			}
-			.control-bar button svg{
-				fill: #428bca;
-			}
-			.control-bar .progress{
-				height:20%;
-				width:100%;
-			}
-			.control-bar div.control-buttons{
-				 clear:both;
-				 height:80%;
-				 width:100%;
-			}
-			.control-bar .control-play, .control-bar .control-pause{
-				width:5%;
-			}
-			.control-bar .control-play{
-				display: block;
-			}
-			.control-bar .control-play svg{
-				fill: black;
-			}
-			.control-bar .control-pause{
-				display: none;
-			}
-
-			.control-bar.ready svg, .control-bar.playing svg{
-				fill: #428bca;
-			}
-			
-			.control-bar.ready .control-play{
-				display: block;
-			}
-			.control-bar.ready .control-pause{
-				display: none;
-			}
-
-			.control-bar.playing .control-play{
-				display: none;
-			}
-			.control-bar.playing .control-pause{
-				display: block;
-			}
-
-			.control-bar .control-volume{
-				 float:right;
-				 width:20%;
-			}
-			.control-bar .control-volume .control-volume-adjust{
-				width:15%;
-			}
-			.control-bar .control-volume .progress-container{
-				width:70%;
-			}
-			.control-bar .control-volume .progress-container:before{
-				content:'';
-				display:block;
-				width:100%;
-				height:37.5%;
-			}
-			.control-bar .control-volume .progress-container .progress{
-				width:100%;
-				height:25%;
-			}
-
-		</style>
+		<link rel="stylesheet" href="/public/css/style.css">
 	</head>
 	<body onload="pageLoaded();">
-		<div class="row" id="viewport-container"></div>
-
-		<div class="control-bar" id="control-bar">
-			<div class="progress">
-				<div class="progress-bar" id="presentation-progress" style="width:43%;"></div>
-			</div>
-			
-			<div class="control-buttons">
-				<button class="control-play" onclick="pres.play();">
-					<svg viewBox="0 0 20 20" preserveAspectRatio="xMidYMid" class="play">
-						<polygon class="fill" points="0,0 20,10 0,20"></polygon>
-					</svg>
-				</button>
-
-				<button class="control-pause" onclick="pres.pause();">
-					<svg viewBox="0 0 20 20" preserveAspectRatio="xMidYMid">
-						<polygon class="fill" points="0,2 20,2 20,7 0,7"></polygon>
-						<polygon class="fill" points="0,18 20,18 20,13 0,13"></polygon>
-					</svg>
-				</button>
-			</div>
-		</div>
 	</body>
 </html>

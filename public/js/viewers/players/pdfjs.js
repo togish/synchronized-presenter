@@ -22,6 +22,8 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 	// When the player is executing playback
 	this.PLAYING = 'playing';
 
+	this.htmlElement = targetElement;
+
 	var _this = this;
 
 	// Example:
@@ -29,15 +31,39 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 	var _numOfPages = 0;
 	var _current = 0;
 	var _status;
-	var _transition = function (a, b) {
-		a.style.display = 'none';
-		b.style.display = 'block';
+	var _canvas;
+	var _ratio = 4/3;
+	var _targetHeight = 1;
+
+	var _renderPage = function(pageNo){
+		console.log("Starting to render page");
+		_pdf.getPage(pageNo).then(function(page) {
+			var viewport = page.getViewport(1);
+			viewport = page.getViewport(_targetHeight/viewport.height);
+			_canvas.height = _targetHeight;
+			_canvas.width = _targetHeight * _ratio;
+			page.render({
+				canvasContext: _canvas.getContext('2d'), 
+				viewport: viewport
+			});
+		});
 	};
 
 	// Returns true if the resource is using timestamps
 	this.hasTimestamp = function(){
 		return false;
 	};
+
+	this.getRatio = function(){
+		return _ratio;
+	};
+	this.setSize = function(height){
+		targetElement.style.height = height;
+		targetElement.style.width = height * _ratio;
+		_targetHeight = height;
+		_renderPage(_current);
+	};
+
 
 	// Returns the position, could be slide number or timestamp.
 	this.getPosition = function(){
@@ -78,32 +104,24 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
 		if (position >= _numOfPages || position < 0) return;
-		_transition(targetElement.children[_current], targetElement.children[position]);
+		_renderPage(position);
 		_current = position;
 	};
 
 	this.init = function(){
 		// Grap the url from the configuration
-		PDFJS.getDocument(resource.data.url).then(function(pdf) {
+		_canvas = document.createElement('canvas');
+		targetElement.appendChild(_canvas);
+		PDFJS.getDocument(resource.url).then(function(pdf) {
+			_pdf = pdf;
 			_numOfPages = pdf.numPages;
-			var addPage = function(i){
-				pdf.getPage(i).then(function(page) {
-					var scale = 1;
-					var viewport = page.getViewport(scale);
-					var canvas = document.createElement('canvas');
-					canvas.style.display = i == 1 ? 'block' : 'none';
-					targetElement.appendChild(canvas);
-					
-					var context = canvas.getContext('2d');
-					canvas.height = viewport.height;
-					canvas.width = viewport.width;
-					page.render({canvasContext: context, viewport: viewport});
-				});
-			};
-			for (var i = 1; i <= _numOfPages; i++) {
-				addPage(i);
+			console.log("PDF loaded");
+			_renderPage(1);
+			// Run through all and find most frequent
+			// _ratio = viewport.width/viewport.height;
+			if(typeof callback == "function"){
+				callback(_this, _this.READY);
 			}
-			console.debug(callback(_this, _this.READY));
 		});
 	};
 };

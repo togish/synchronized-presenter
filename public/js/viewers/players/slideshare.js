@@ -20,6 +20,8 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 	// When the player is executing playback
 	this.PLAYING = 'playing';
 
+	this.htmlElement = targetElement;
+
 	var _this = this;
 	var _status;
 	var _statusTarget;
@@ -31,6 +33,15 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 		callback(_this, _status);
 		return true;
 	};
+
+	this.getRatio = function(){
+		return _viewer.getRatio;
+	};
+	this.setSize = function(height){
+		targetElement.height = height;
+		targetElement.width = height * _ratio;
+	};
+
 
 	// Returns true if the resource is using timestamps
 	this.hasTimestamp = function(){
@@ -78,7 +89,7 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 
 	this.init = function(){
 		updateStatus(_this.LOADING);
-		_viewer = new SlideShareViewer(resource.data.url, targetElement, {
+		_viewer = new SlideShareViewer(resource.url, targetElement, {
 			readyCallback: function(){
 				updateStatus(_this.READY);
 			}});

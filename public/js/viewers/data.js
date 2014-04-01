@@ -61,7 +61,6 @@ var Data = function (loadTarget) {
 
 		presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
 			cont[idxViewport] = {
-				lastSegue:{}, 
 				segues: rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
 					cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source]);
 					return cont;
@@ -96,6 +95,7 @@ var Data = function (loadTarget) {
 			clean.sources.push({
 				type: s.type,
 				title: s.title,
+				timed: s.timed,
 				url: s.url,
 				length: s.length,
 				// Length, color,,... What more?
@@ -105,15 +105,15 @@ var Data = function (loadTarget) {
 			var sgs = [];
 			v.segues.forEach(function(s){
 				var ss = {
-					offset: s.offset,
-					action: s.action,
+					offset: s.getOffset(),
+					action: s.getAction(),
 				};
 
-				if(s.value != undefined){
-					ss.value = s.value;
+				if(typeof s.getValue() != "undefined"){
+					ss.value = s.getValue();
 				}
-				if(s.source != undefined){
-					ss.source = s.source;
+				if(typeof s.getSourceId() != "undefined"){
+					ss.source = s.getSourceId();
 				}
 
 				sgs.push(ss);

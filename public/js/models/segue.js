@@ -31,13 +31,18 @@ var Segue = function (segue, source) {
 	};
 
 
-	// Returns the type of the segue
-	this.getType = function(){
-		return segue.type;
-	};
 	// Returns the source object
 	this.getSource = function(){
 		return source;
+	};
+
+	// Returns the source object
+	this.getSourceId = function(){
+		return segue.source;
+	};
+	// Returns the type of the segue
+	this.getAction = function(){
+		return segue.action;
 	};
 	this.hasSource = function(){
 		return typeof source != "undefined";

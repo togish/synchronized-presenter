@@ -31,9 +31,7 @@ var Sources = function (loadTarget) {
 				loadTarget.presentation.sources.push({
 					type: "youtube",
 					timed: true,
-					data: {
-						url: url
-					},
+					url: url,
 					title: d.title,
 					length: d.duration,
 					color: _this.colors[loadTarget.presentation.sources.length]
@@ -46,9 +44,7 @@ var Sources = function (loadTarget) {
 				loadTarget.presentation.sources.push({
 					type: "slideshare",
 					timed: false,
-					data: {
-						url: url
-					},
+					url: url,
 					title: slideShare.presentation.title,
 					length: slideShare.length(),
 					color: _this.colors[loadTarget.presentation.sources.length]
@@ -67,9 +63,7 @@ var Sources = function (loadTarget) {
 			var res = {
 				type: "pdfjs",
 				timed: false,
-				data: {
-					url: url
-				},
+				url: url,
 				title: filename,
 				color: _this.colors[loadTarget.presentation.sources.length]
 			};

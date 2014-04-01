@@ -5,7 +5,7 @@
 /* global Event: false */
 /* global console: false */
 
-var Presentation = function (containerElement) { // TODO Add options, maybe!
+var Presenter = function (containerElement) {
 	// When the presentation or child player have had an error stopping the execution!
 	this.ERROR = "error";
 
@@ -32,6 +32,14 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 	var _status;
 	var _timers;
 	var _shouldPlay = false;
+
+
+	var _viewportContainer;
+	var _controlBar;
+	var _progress;
+	var _progressBar;
+
+
 
 	// Proxy methods for event subscribe, remove and dispatch
 	this.addEventListener = function (a,b,c) {containerElement.addEventListener(a,b,c);};
@@ -63,6 +71,23 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 		return _status;
 	};
 
+	this.updateRatio = function(){
+		// Normalization of the ratios
+		var Rtot = _this.presentation.viewports.reduce(function(cont, v){
+			if(typeof v.currentHandler == "undefined") return cont;
+			return cont + v.currentHandler.getRatio();
+		}, 0);
+		if (Rtot == 0) return;
+
+		var xvp = document.body.scrollWidth;
+		var yvp = document.body.scrollHeight;
+		var height = Rtot > xvp/yvp ? xvp / Rtot : yvp;
+		_this.presentation.viewports.forEach(function(viewport, viewportIdx){
+			if(typeof viewport.currentHandler == "undefined") return;
+			viewport.currentHandler.setSize(height);
+		});
+	};
+
 	// Plays/continues the presentation
 	this.play = function(leaveShp){
 		// if replay seek to start
@@ -82,15 +107,21 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 		_this.presentation.viewports.forEach(function(viewport, viewportIdx){
 			var smallestNegative = {};
 
-			viewport.segues.forEach(function(sg){
-				var delay = sg.offset-_position;
+			viewport.segues.forEach(function(sg, segueIdx){
+				var delay = sg.getOffset()-_position;
 				if (0 <= delay){
 					var timer = setTimeout(function(){
-						var handler = _this.presentation.sources[sg.source].handlers[viewportIdx];
+						// Hide and show viewport
+						for(var i = 0; i < viewport.htmlElement.children.length; i++){
+							viewport.htmlElement.children[i].style.display = 'none';
+						}
+						var handler = sg.getSource().handlers[viewportIdx];
+						handler.htmlElement.style.display = 'block';
+						viewport.currentHandler = handler;
 
-						// TODO Hide and pause all other sources for this viewport
+						_this.updateRatio();
 
-						handler.seek(sg.value);
+						handler.seek(sg.getValue());
 						handler.play();
 						viewport.lastSegue = sg;
 					}, delay*1000);
@@ -102,11 +133,11 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 
 			// Used when paused and starts again.
 			if(smallestNegative.delay !== undefined){
-				var handler = _this.presentation.sources[smallestNegative.segue.source].handlers[viewportIdx];
+				var handler = smallestNegative.segue.getSource().handlers[viewportIdx];
 				if(handler.hasTimestamp()){
-					smallestNegative.segue.position += _position;
+					// smallestNegative.segue.position += _position;
 				}
-				handler.seek(smallestNegative.segue.position);
+				handler.seek(smallestNegative.segue.getValue());
 				handler.play();
 			}
 		});
@@ -189,7 +220,7 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 	// Updates the status of the presentation. Lowest status child decides.
 	var updateStatus = function () {
 		var statusNew = _this.presentation.viewports.reduce(function(previous, viewport, viewportIdx){
-			var current = _this.presentation.sources[viewport.lastSegue.source].handlers[viewportIdx];
+			var current = viewport.lastSegue.getSource().handlers[viewportIdx];
 			// TODO Ignore if not in the time scope.
 			// return previous;
 			if(typeof current === "undefined") return previous;
@@ -265,18 +296,21 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 	this.load = function(presentation) {
 		// TODO Clear the html for rebuilding? Might be a good idea! LOL!
 		_this.presentation = presentation;
+		window.pres = presentation;
 
 		// Adding the resource handler to the presentation object
 		_this.presentation.viewports.forEach(function(viewport, viewportIdx){
-			var viewportElement = document.createElement("div"); 
+			var viewportElement = document.createElement("div");
+			viewport.htmlElement = viewportElement;
+			viewportElement.className = "viewport";
 
 			// Generated handlers for each source per viewport. Allowing same source in multiple viewports simultaneously.
 			viewport.segues.forEach(function(segue, segueIdx){
 				// Gets a reference to the source object
-				var source = _this.presentation.sources[segue.source];
+				var source = segue.getSource();
 
 				// Skip if source not avaliable or not needed
-				if(typeof source == "undefined" || segue.type == "clear") return;
+				if(typeof source == "undefined" || segue.getAction() == "clear") return;
 
 				// Ensures that the handlers array exists
 				if(typeof source.handlers == "undefined") source.handlers = [];
@@ -288,9 +322,6 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 				if(typeof source.handlers[viewportIdx] != "undefined") return;
 
 				var sourceElement = document.createElement("div");
-				viewportElement.appendChild(sourceElement);
-				// if (options.viewportClass != undefined) viewport.classList.add(options.viewportClass);
-		
 				if(source.type == "slideshare"){
 					source.handlers[viewportIdx] = new SlideSharePlayer(source, sourceElement, childCallback);
 				} else if(source.type == "youtube"){
@@ -302,10 +333,15 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 					return;
 				}
 
+				if(segueIdx == 0){
+					viewport.currentHandler = source.handlers[viewportIdx];
+				}
+				viewportElement.appendChild(sourceElement);
+
 				// TODO Hide the source html element. Might be needed to do this post initialization of content.
 			});
 
-			containerElement.appendChild(viewportElement);
+			_viewportContainer.appendChild(viewportElement);
 		});
 
 		_this.presentation.sources.forEach(function(source){
@@ -314,5 +350,58 @@ var Presentation = function (containerElement) { // TODO Add options, maybe!
 				handler.init();
 			});
 		});
+	};
+
+	this.initUI = function(){
+		_viewportContainer = document.createElement('div');
+		_viewportContainer.className = 'block-viewport';
+		containerElement.appendChild(_viewportContainer);
+
+		_controlBar = document.createElement('div');
+		_controlBar.className = 'control-bar';
+		_progress = document.createElement('div');
+		_progress.className = 'progress';
+		_progressBar = document.createElement('div');
+		_progressBar.className = 'progress-bar';
+		_progress.appendChild(_progressBar);
+		_controlBar.appendChild(_progress);
+		containerElement.appendChild(_controlBar);
+
+		var ease = function(e, to, time){
+			e.style["-webkit-transition"] = "width "+time+"s linear";
+			e.style.transition = "width "+time+"s linear";
+			e.style.width = to + "%";
+		}
+
+		_btnPlayPause = document.createElement('button');
+		_btnPlayPause.className = "play-pause";
+		_controlBar.appendChild(_btnPlayPause);
+
+		_this.addEventListener(_this.EVENT_STATUS, function(e){
+			var percent = _this.getCompletedPercent();
+			_controlBar.classList.remove("ready");
+			_controlBar.classList.remove("playing");
+			ease(_progressBar, percent, 0);
+			if(_this.getStatus() == _this.READY){
+				_this.updateRatio();
+				_controlBar.classList.add("ready");
+			} else if(_this.getStatus() == _this.PLAYING){
+				_controlBar.classList.add("playing");
+				ease(_progressBar, 100, _this.getDuration() - _this.getPosition());
+			}
+		}, false);
+
+		_btnPlayPause.addEventListener('click', function(){
+			if(_this.getStatus() == _this.READY){
+				_this.play();
+			} else if(_this.getStatus() == _this.PLAYING){
+				_this.pause();
+			}
+		});
+
+
+		_this.addEventListener(_this.EVENT_DURATION, function(e){
+			console.log("UI EVENT_DURATION changed to: " + _this.getDuration());
+		}, false);
 	};
 };
