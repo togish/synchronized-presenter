@@ -76,6 +76,9 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 		var frame = _player.a;
 		frame.height = height;
 		frame.width = height * _ratio;
+
+		console.debug("Slideshare ratio: " + _this.getRatio());
+		console.debug("Slideshare calc width: " + _this.getRatio() * height);
 	};
 
 	// Returns true if the resource is using timestamps

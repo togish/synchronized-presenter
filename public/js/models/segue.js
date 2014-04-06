@@ -4,94 +4,27 @@
 /* global YouTubePlayer: false */
 /* global Event: false */
 /* global console: false */
-var Segue = function (segue, source) {
+var Segue = function (segue, source, data) {
+	this.htmlElement = document.createElement('div');
+	this.source = source;
+	this.hasSource = source instanceof Source;
+	this.timed = source instanceof Source && source.timed;
+	this.action = segue.action;
+	this.offset = segue.offset;
+	this.value = segue.value;
+
 	// Scope rule hax
 	var _this = this;
-
+	var _segueOffset;
+	var _segueValue;
 	// State variables for the focus/blur management
 	var _isFocused = false;
 	var _isFocusedInput = false;
 	var _isMouseOver = false;
-	var _isUIInitialized = false;
-
-	// Holding html element
-	var _segueValue;
-	var _segueOffset;
-
-	var _focus = function(show){
-		_isFocused = show;
-		_this.htmlElement.classList.remove("focus-offset");
-		_this.htmlElement.classList.remove("focus-value");
-		if(show === false){
-			_this.htmlElement.dispatchEvent(new CustomEvent("segueBlured"));
-		} else {
-			_this.htmlElement.classList.add("focus-"+show);
-			_this.htmlElement.dispatchEvent(new CustomEvent("segueFocused"));
-		}
-	};
-
-
-	// Returns the source object
-	this.getSource = function(){
-		return source;
-	};
-
-	// Returns the source object
-	this.getSourceId = function(){
-		return segue.source;
-	};
-	// Returns the type of the segue
-	this.getAction = function(){
-		return segue.action;
-	};
-	this.hasSource = function(){
-		return typeof source != "undefined";
-	};
-	// Returns the offset value
-	this.getOffset = function(){
-		return segue.offset;
-	};
-	// Returns the segue value
-	this.getValue = function(){
-		return segue.value;
-	};
 
 	/*
-	 * Responds with the length of the segue
-	 * If no timing, -1 is returned.
+	 * Tries to ajust the offset of a segue. Returns true if success!
 	 */
-	this.getLength = function(){
-		return _this.hasSource() && source.timed ? source.length - segue.value : -1;
-	};
-
-
-	// Tries to ajust the value of a segue. Returns true if success!
-	this.ajustValue = function(input){
-		if(!_this.hasSource()){
-			return;
-		}
-
-		// Save the current value as a fallback for invalid input
-		var newValue = SomethingToSeconds(input, source.timed);
-
-		// Checks if possible to perform the change
-		var ret = false;
-		if(typeof newValue != "undefined" && 0 <= newValue && newValue < source.length){
-			segue.value = newValue;
-			ret = true;
-		}
-
-		// Build the string representation of the value
-		_this.updateUI();
-		_this.htmlElement.dispatchEvent(new CustomEvent("segueChanged"));
-		return ret;
-	};
-
-	this.ajustValueRelative = function(rel){
-		_this.ajustValue(segue.value + rel);
-	};
-
-
 	this.ajustOffset = function(input){
 		// Save the current value as a fallback for invalid input
 		var newValue = SomethingToSeconds(input);
@@ -99,47 +32,109 @@ var Segue = function (segue, source) {
 		// Checks if possible to perform the change
 		var ret = false;
 		if(typeof newValue != "undefined" && 0 <= newValue){
-			segue.offset = newValue;
+			_this.offset = newValue;
 			ret = true;
 		}
 
 		// Build the string representation of the value
 		_this.updateUI();
-		_this.htmlElement.dispatchEvent(new CustomEvent("segueChanged"), true);
+		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_CHANGED, {detail:_this, bubbles:true}));
 		return ret;
-
 	};
 	
+	/*
+	 * Tries to ajust the offset of a segue, relative to the current value. Returns true if success!
+	 */
 	this.ajustOffsetRelative = function(input){
 		_this.ajustOffset(segue.offset + input);
 	};
 
-	this.remove = function(){
-		_this.htmlElement.remove();
-		// arr.splice(index, 1); WHAT THE FUCK!
-		// Fire event
+	/*
+	 * Tries to ajust the value of a segue. Returns true if success!
+	 */
+	this.ajustValue = function(input){
+		console.debug(input);
+		if(!_this.hasSource){
+			return false;
+		}
+
+		// Save the current value as a fallback for invalid input
+		var newValue = SomethingToSeconds(input, _this.timed);
+
+		// Checks if possible to perform the change
+		var ret = false;
+		if(typeof newValue != "undefined" && 0 <= newValue && newValue < source.length){
+			_this.value = newValue;
+			ret = true;
+		}
+
+		// Build the string representation of the value
+		_this.updateUI();
+		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_CHANGED, {detail:_this, bubbles:true}));
+		return ret;
 	};
 
-	this.updateUI = function(){
-		if(!_isUIInitialized) return;
-		// set the input fields correct
+	/*
+	 * Tries to ajust the value of a segue, relative to the current value. Returns true if success!
+	 */
+	this.ajustValueRelative = function(rel){
+		if(!_this.hasSource){
+			return false;
+		}
+		console.debug(segue.value + rel);
+		_this.ajustValue(segue.value + rel);
+	};
 
+	/*
+	 * Responds with the length of the segue
+	 * If no timing, -1 is returned.
+	 */
+	this.getLength = function(){
+		return _this.timed ? source.length - segue.value : -1;
+	};
+
+	/*
+	 * Removes the segue
+	 */
+	this.remove = function(){
+		_this.htmlElement.remove();
+		if(data instanceof Data){
+			data.removeSegue(_this);
+		}
+	};
+
+	/*
+	 * Updates the values in the UI
+	 */
+	this.updateUI = function(){
 		_segueOffset.value = SecondsToTime(segue.offset);
 		var inputLen = _segueOffset.value.length;
 		_segueOffset.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 
-		if(!_this.hasSource()) return;
-		_segueValue.value = source.timed ? SecondsToTime(segue.value) : segue.value;
+		if(!_this.hasSource) return;
+		_segueValue.value = _this.timed ? SecondsToTime(segue.value) : segue.value;
 		inputLen = _segueValue.value.length;
 		_segueValue.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 	};
 
+	/*
+	 * Updates the values in the UI
+	 */
+	var _focus = function(show){
+		_isFocused = show;
+		_this.htmlElement.classList.remove("focus-offset");
+		_this.htmlElement.classList.remove("focus-value");
+		if(show === false){
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_BLURED, {bubbles:true}));
+		} else {
+			_this.htmlElement.classList.add("focus-"+show);
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_FOCUED, {bubbles:true}));
+		}
+	};
 
-	this.initUI = function(){
-		if(_isUIInitialized) return;
-		_isUIInitialized = true;
 
-		_this.htmlElement = document.createElement('div');
+	(function(){
+		// Setting up the UI
 		_this.htmlElement.className ="segue segue-" + segue.action;
 		_this.htmlElement.addEventListener("mouseover", function(e){
 			_isMouseOver = true;
@@ -160,6 +155,7 @@ var Segue = function (segue, source) {
 			}
 		});
 
+		// Helper method for building generic 
 		var addBlock = function(classType, relativeCallback, absoluteCallback){
 			// Builds the offset ajustment block
 			var container = document.createElement('div');
@@ -168,18 +164,16 @@ var Segue = function (segue, source) {
 				e.stopPropagation();
 				input.focus();
 			});
-
 			// Adds offset substraction button
 			var sub = document.createElement('a');
 			sub.className = "sub";
 			sub.innerHTML = "-";
 			sub.addEventListener('click', function(e){
-				e.stopPropagation();
+				//e.stopPropagation();
 				e.preventDefault();
 				relativeCallback(-1);
 			});
 			container.appendChild(sub);
-
 			// Building html element for the value enter field
 			var input = document.createElement('input');
 			input.type = "text";
@@ -189,7 +183,7 @@ var Segue = function (segue, source) {
 			});
 			input.addEventListener("blur", function(e){
 				// Tries to execute a value update
-				 _isFocusedInput = false;
+				_isFocusedInput = false;
 				absoluteCallback(input.value);
 				if(!_isMouseOver){
 					_focus(false);
@@ -202,7 +196,6 @@ var Segue = function (segue, source) {
 				}
 			});
 			container.appendChild(input);
-
 			// Building html element for the value ajust add
 			var add = document.createElement('a');
 			add.className = "add";
@@ -210,7 +203,6 @@ var Segue = function (segue, source) {
 			add.addEventListener('click', function(e){
 				e.stopPropagation();
 				e.preventDefault();
-
 				relativeCallback(1);
 			});
 			container.appendChild(add);
@@ -221,12 +213,12 @@ var Segue = function (segue, source) {
 		_segueOffset = addBlock("offset", _this.ajustOffsetRelative, _this.ajustOffset);
 
 		// If a segue with a value. Then add input for that.
-		if(segue.action != "clear"){
+		if(_this.action != "clear"){
 			// Sets the color of the segue according to the source color
-			_this.htmlElement.style.backgroundColor = source.color;
+			_this.htmlElement.style.backgroundColor = _this.source.color;
 			_segueValue = addBlock("value", _this.ajustValueRelative, _this.ajustValue);
 		}
-
+	
 		// Building html element for the delete segue
 		var segueDelete = document.createElement('a');
 		segueDelete.className = "remove";
@@ -236,8 +228,6 @@ var Segue = function (segue, source) {
 			_this.remove();
 		});
 		_this.htmlElement.appendChild(segueDelete);
-
-
 		_this.updateUI();
-	};
+	})();
 }

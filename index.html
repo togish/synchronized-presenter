@@ -27,24 +27,21 @@
 		<script type="text/javascript" src="/public/js/viewers/data.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/sources.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/timeline.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/timelines.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/controlbar.js"></script>
 
 		<script type="text/javascript" src="/public/js/controllers/builder.js"></script>
-		<script type="text/javascript" src="/public/js/controllers/presentation.js"></script>
+		<script type="text/javascript" src="/public/js/controllers/presenter.js"></script>
 
 		<script type="text/javascript">
 		function pageLoaded(){
 			if(UrlParams.build != undefined){
 				var builder = new Builder(document.body);
-				builder.initUI();
-				builder.loadAuto();
 			} else {
 				function onYouTubeIframeAPIReady() {
 					console.debug("YT Ready");
 				}
 				var pres = new Presenter(document.body);
-				window.pp = pres;
-				pres.initUI();
-				pres.loadAuto();
 			}
 		};
 		</script>

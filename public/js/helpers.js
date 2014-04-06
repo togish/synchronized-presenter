@@ -78,7 +78,6 @@ var SomethingToSeconds = function(input, timed){
 };
 
 
-
 // Taken from:
 // https://developer.mozilla.org/en-US/docs/Web/API/CustomEvent#Polyfill
 (function () {
@@ -91,3 +90,32 @@ var SomethingToSeconds = function(input, timed){
 	CustomEvent.prototype = window.Event.prototype;
 	window.CustomEvent = CustomEvent;
 })();
+
+var EventTypes = {
+	EVENT_PRESENTATION_LOADED: "PresentationLoaded",
+
+	EVENT_SOURCE_ADDED: "0",
+	EVENT_SOURCE_REMOVED: "l",
+	EVENT_SOURCE_DRAGGED: "8",
+
+	EVENT_VIEWPORT_ADDED: "2",
+	EVENT_VIEWPORT_REMOVED: "3",
+
+	EVENT_TIMELINE_CHANGED: "dfs",
+
+	EVENT_SEGUE_ADDED: "4",
+	EVENT_SEGUE_REMOVED: "5",
+	EVENT_SEGUE_CHANGED: "dkkdsasdw",
+	EVENT_SEGUE_BLURED: "fkdo",
+	EVENT_SEGUE_FOCUED: "jdjdosow",
+
+	EVENT_PRESENTER_STATUS: "statusChanged",
+	EVENT_PRESENTER_DURATION: "durationChanged"
+};
+
+var StatusTypes = {
+	ERROR: "error",
+	LOADING: "loading",
+	READY: "ready",
+	PLAYING: "playing"
+};

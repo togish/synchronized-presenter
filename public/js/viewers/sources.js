@@ -5,52 +5,92 @@
 
 
 /*
- * 
+ * Class for managing the UI for the source list representation
  */
-var Sources = function (loadTarget) {
+var Sources = function (contanerElement) {
 	// Scope rule hax
 	var _this = this;
 
-	// Color list
-	this.colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
+	_this.htmlElement = document.createElement('div');
+	_this.htmlElement.className = 'block-sources';
+	var _sourcesHeader = document.createElement('h2');
+	_sourcesHeader.innerHTML = "Sources";
+	var _sourcesList = document.createElement('div');
+	var _sourcesFooter = document.createElement('div');
+	this.htmlElement.appendChild(_sourcesHeader);
+	this.htmlElement.appendChild(_sourcesList);
+	this.htmlElement.appendChild(_sourcesFooter);
 
-	var _sourcesHeader;
-	var _sourcesList;
+
+	// Custom source for the clear segue
+	var clearSource = new Source({type:"clear", title:"Clear viewport"});
+	_sourcesFooter.appendChild(clearSource.htmlElement);
+
+	// Builds the field for adding more sources
+	var addSource = document.createElement("h3");
+	var addSourceInput = document.createElement("input");
+	addSourceInput.type = "text";
+	addSourceInput.placeholder = "Add source. Paste link here!";
+	addSourceInput.addEventListener("keyup", function(e){
+		if(e.keyCode == 13){
+			e.preventDefault();
+			_this.addSource(addSourceInput.value);
+		}
+	});
+	addSource.appendChild(addSourceInput);
+	_sourcesFooter.appendChild(addSource);
+
+	var _data;
+	
+	// Renders the source list when the presentation is loaded
+	contanerElement.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(ev){
+		_data = ev.detail;
+		_data.presentation.sources.forEach(function(source){
+			_sourcesList.appendChild(source.htmlElement);
+		});
+	});
+
+	// Renders the sourcelist when a new source is added.
+	contanerElement.addEventListener(EventTypes.EVENT_SOURCE_ADDED, function(ev){
+		_sourcesList.appendChild(ev.detail.htmlElement);
+	});
 
 
 	/*
-	 * Adds a source to the presentation
+	 * Adds a source, based on the url, to the presentation
 	 */
 	this.addSource = function(url){
+		if(!(data instanceof Data)) {
+			return;
+		}
+		
 		// Tries if it is a youtube link
 		var youtubeVidId = YouTubeHelpers.parseUrl(url);
 		if(typeof youtubeVidId == "string"){
 			// Loads metadata
 			YouTubeHelpers.loadMetadata(youtubeVidId,function(d){
 				// Adds the source to the presentation
-				loadTarget.presentation.sources.push({
+				var source = {
 					type: "youtube",
 					timed: true,
 					url: url,
 					title: d.title,
 					length: d.duration,
-					color: _this.colors[loadTarget.presentation.sources.length]
-				});
-
-				_this.render();
+					color: data.colors[data.presentation.sources.length]
+				};
+				data.addSource(new Source(source, data));
 			});
 		} else if (url.match(/\.slideshare\.net/i)){
 			var callback = function(){
-				loadTarget.presentation.sources.push({
+				var source = {
 					type: "slideshare",
 					timed: false,
 					url: url,
 					title: slideShare.presentation.title,
 					length: slideShare.length(),
-					color: _this.colors[loadTarget.presentation.sources.length]
-				});
-
-				_this.render();
+					color: data.colors[data.presentation.sources.length]
+				};
+				data.addSource(new Source(source, data));
 			};
 			var slideShare = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
 		} else if (url.match(/.*\.pdf$/i)){
@@ -65,13 +105,12 @@ var Sources = function (loadTarget) {
 				timed: false,
 				url: url,
 				title: filename,
-				color: _this.colors[loadTarget.presentation.sources.length]
+				color: data.colors[data.presentation.sources.length]
 			};
 
 			var c = function(pp){
 				res.length = pp.getDuration();
-				loadTarget.presentation.sources.push(res);
-				_this.render();
+				data.addSource(new Source(source, data));
 			};
 
 			var pdf = new PdfJsPlayer(res, document.createElement("div"), c);
@@ -82,156 +121,39 @@ var Sources = function (loadTarget) {
 	};
 
 	/*
-	 * Adds a source to the presentation
+	 * Updates the position markers for the sources
 	 */
-	this.removeSource = function(index){
-		// Removes the source at the given index
-		loadTarget.presentation.sources.splice(index, 1);
+	//	this.positionChanged = function(position, length){
+	//		// TODO Implement this when the preview is added!
+	//		
+	//		return;
+	//		// Set the length and position fields
+	//		_sourcesHeader.innerHTML = "Sources <span>" + position + " / " + length + "</span>";
+	//
+	//		// <span class="timestamp">3:25<span class="viewport">A</span></span>
+	//		presentation.sources.forEach(function(source, sourceIndex){
+	//			presentation.viewports.forEach(function(viewport, viewportIndex){
+	//				// Is it among last event in any viewports?
+	//				var segue = viewport.lastSegue; // could be a play segue
+	//				if (segue != undefined && sourceIndex == segue.source) {
+	//					// YAY Jackpot baby!
+	//					source.htmlElement.classList.add("active");
+	//				} else if (segue != undefined && segue.type == "clear") {
+	//					//_clearSource.classList.add("active");
+	//				} else {
+	//					source.htmlElement.classList.remove("active");
+	//				}
+	//			});
+	//		});
+	//	};
+	// Updates the position markers when a segue changes
+	//loadTarget.addEventListener("SegueChanged", function(ev){
+	//	_this.positionChanged();
+	//});
+	// Updates the position markers when the playback position changes
+	//	loadTarget.addEventListener("PositionChanged", function(ev){
+	//		// TODO Parse the event details, and use as parameter
+	//		_this.positionChanged();
+	//	});
 
-		// Fires event about the change
-		loadTarget.dispatchEvent(new CustomEvent("sourceRemoved", {detail: index}));
-	};
-
-
-	/*
-	 * Updates the list of sources
-	 */
-	this.render = function(){
-		// Clears the container
-		while(_sourcesList.firstChild){
-			_sourcesList.removeChild(_sourcesList.firstChild);	
-		}
-
-		// Function for adding a source line to the container
-		var addLine = function(titleText, transferData){
-			var element = document.createElement('h3');
-
-			var draggable = document.createElement('span');
-			draggable.className = 'drag';
-			draggable.draggable = 'true';
-			draggable.innerHTML = '+';
-			draggable.addEventListener('dragstart', function(e){
-				e.dataTransfer.dropEffect = 'copy';
-				e.dataTransfer.setData("text/plain", transferData);
-			}, false);
-			draggable.addEventListener('dragend', function(e){
-				e.dataTransfer.dropEffect = 'copy';
-			}, false);
-			element.appendChild(draggable);
-
-			if(typeof type != "undefined"){
-				var type = document.createElement('span');
-				type.className = 'type type-' + type;
-				type.innerHTML = '' + type;
-				element.appendChild(type);
-			}
-
-			var title = document.createElement('span');
-			title.className = 'title';
-			title.innerHTML = '' + titleText;
-			element.appendChild(title);
-
-			var shows = document.createElement('span');
-			shows.className = 'shows';
-			element.appendChild(shows);
-
-			// Adds the line to the container
-			_sourcesList.appendChild(element);
-			return {line: element, shows:shows};
-		};
-
-		// Adds the sources to the container
-		loadTarget.presentation.sources.forEach(function(source, index){
-			
-			source.htmlElement = addLine(source.title, index);
-			source.htmlElement.line.style.background = source.color;
-
-			// Adds ability to click and show extra buttons on a source.
-			source.htmlElement.line.addEventListener('click', function(e){
-				source.htmlElement.line.classList.add("focused");
-			});
-			source.htmlElement.line.addEventListener('mouseleave', function(e){
-				source.htmlElement.line.classList.remove("focused");
-			});
-
-			// Adds remove button to the source
-			var removeSource = document.createElement('a');
-			removeSource.className = "remove";
-			removeSource.innerHTML = "X";
-			removeSource.addEventListener('click', function(e){
-				_this.removeSource(index);
-			});
-			source.htmlElement.line.appendChild(removeSource);
-		});
-
-		// Custom source for the clear segue
-		_clearSource = addLine("Clear viewport", "clear");
-
-		// Builds the field for adding more sources
-		var addSource = document.createElement("h3");
-		var addSourceInput = document.createElement("input");
-		addSourceInput.type = "text";
-		addSourceInput.placeholder = "Add source. Paste link here!";
-		addSourceInput.addEventListener("keyup", function(e){
-			if(e.keyCode == 13){
-				e.preventDefault();
-				_this.addSource(addSourceInput.value);
-			}
-		});
-		addSource.appendChild(addSourceInput);
-		_sourcesList.appendChild(addSource);
-	}
-
-	// Updates the position for updating position. (Called every single second!)
-	this.positionChanged = function(position, length){
-		// TODO Implement this when the preview is added!
-		return;
-		// Set the length and position fields
-		_sourcesHeader.innerHTML = "Sources <span>" + position + " / " + length + "</span>";
-
-		// <span class="timestamp">3:25<span class="viewport">A</span></span>
-		presentation.sources.forEach(function(source, sourceIndex){
-			presentation.viewports.forEach(function(viewport, viewportIndex){
-				// Is it among last event in any viewports?
-				var segue = viewport.lastSegue; // could be a play segue
-				if (segue != undefined && sourceIndex == segue.source) {
-					// YAY Jackpot baby!
-					source.htmlElement.classList.add("active");
-				} else if (segue != undefined && segue.type == "clear") {
-					_clearSource.classList.add("active");
-				} else {
-					source.htmlElement.classList.remove("active");
-				}
-			});
-		});
-	};
-
-
-	this.initUI = function(blockSources){
-		_sourcesHeader = document.createElement('h2');
-		_sourcesList = document.createElement('div');
-		
-		blockSources.appendChild(_sourcesHeader);
-		blockSources.appendChild(_sourcesList);
-
-		_sourcesHeader.innerHTML = "Sources";
-
-		// Subscribe to events
-		loadTarget.addEventListener("presentationLoaded", function(ev){
-			// Renders the source list when the presentation is loaded
-			_this.render();
-		});
-
-		loadTarget.addEventListener("sourceRemoved", function(ev){
-			_this.render();
-		});
-
-		loadTarget.addEventListener("segueChanged", function(ev){
-			_this.positionChanged();
-		});
-
-		loadTarget.addEventListener("positionChanged", function(ev){
-			_this.positionChanged();
-		});
-	};
 }

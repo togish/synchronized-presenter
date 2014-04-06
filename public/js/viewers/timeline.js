@@ -4,212 +4,181 @@
 /* global YouTubePlayer: false */
 /* global Event: false */
 /* global console: false */
-var Timeline = function (loadTarget) {
-	// presentation, timelineBlock
+var Timeline = function (viewport, data) {
+	this.htmlElementName = document.createElement('div');
+	this.htmlElement = document.createElement('div');
+	this.segues = viewport.segues;
+
+	// Private instance variables
 	var _this = this;
-
-	var _timelineList;
-	var _timelineContainer;
+	var _maxTimelineLength = 0;
 	var _scale = 5;
+	var _lastDraggedSource;
 
-	this.initUI = function(blockTimeline){
-		_timelineList = document.createElement('div');
-		_timelineList.className = "timeline-list";
- 	
-		_timelineContainer = document.createElement('div');
-		_timelineContainer.className = "timeline-container";
+	this.getLength = function() {
+		return _maxTimelineLength;
+	}
 
-		blockTimeline.appendChild(_timelineList);
-		blockTimeline.appendChild(_timelineContainer);
+	/*
+	 * Initializes the UI that is dependent on event element
+	 */
+	this.initUI = function(eventElement){
+		// Handles element drop over the timeline
+		_this.htmlElement.addEventListener('drop', function(e){
+			// Calculates the offset position based on the drop position
+			var position = Math.round((e.clientX - _this.htmlElement.offsetLeft)/_scale);
 
-		// Subscribe to events
-		loadTarget.addEventListener("presentationLoaded", function(ev){
-			// Renders the source list when the presentation is loaded
-			_this.render();
-		});
+			// Finds whether a clear segue is needed
+			var clearSeguePosition = viewport.segues.reduceRight(function(cont, segue){
+				// If no solution has been found. Go check.
+				if (typeof cont == "undefined" && segue.offset < position){
+					// Calculates the endposition of the last segue.
+					var previousSegueEndPosition = segue.offset + segue.getLength();
+					// returns the endposition if a clear segue is needed
+					return typeof segue.hasSource && segue.timed && previousSegueEndPosition < position ? previousSegueEndPosition : false;
+				}
+				// Passes on the result
+				return cont;
+			}, undefined);
 
-		loadTarget.addEventListener("sourceRemoved", function(ev){
-			var index = ev.detail;
-			// Updates the segues
-			loadTarget.presentation.viewports.forEach(function(viewport){
-				viewport.segues.forEach(function(segue){
-					if(segue.source == index){
-						// Segue associated with the source. Remove it!
-						viewport.segues.remove(segue);
-					} else if (index < segue.source){
-						// ajust the offset
-						segue.source = segue.source-1;
-					}
+			// Fetches the dropped data
+			var transferData = e.dataTransfer.getData("text/plain");
+			
+			// Inserts a clearsegue if needed
+			if (typeof clearSeguePosition == "number" || transferData == "clear") {
+				var clearSegue = new Segue({
+					offset: (typeof clearSeguePosition == "number" ? clearSeguePosition : position),
+					action: "clear",
 				});
+				viewport.segues.push(clearSegue);
+			}
+
+			// If the segue dropped is a real source, add the segue
+			if (transferData == "source") {
+				var segue = new Segue({
+					offset: position,
+					action: "playfrom",
+					value: 0
+				}, _lastDraggedSource);
+				viewport.segues.push(segue);
+			}
+
+			// Order the segues by their offset.
+			viewport.segues.sort(function(a,b){
+				return a.offset-b.offset
 			});
-			_this.render();
-		});
 
-		loadTarget.addEventListener("positionChanged", function(ev){
-			// TODO Update the cursor
-			_this.render();
-		});
+			// Dispatches event about the change
+			if(clearSegue){
+				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_ADDED, {detail: clearSegue, bubbles:true}));
+			}
+			if(segue){
+				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_ADDED, {detail: segue, bubbles:true}));
+			}
+		}, false);
 
-		loadTarget.addEventListener("segueAdded", function(ev){
-			// TODO Update the cursor
-			_this.render();
+		// Handling custom events	
+		eventElement.addEventListener(EventTypes.EVENT_SOURCE_DRAGGED, function(ev){
+			// Listen for last dragged source
+			_lastDraggedSource = ev.detail;
 		});
-		loadTarget.addEventListener("segueChanged", function(ev){
-			// TODO Update the cursor
-			_this.render();
+		
+		// Re-add the elements, and calculate the positions
+		eventElement.addEventListener(EventTypes.EVENT_SEGUE_REMOVED, function(ev){
+			// Update if a segue was removed
+			_this.update();
 		});
-		loadTarget.addEventListener("viewportAdded", function(ev){
-			// TODO Update the cursor
-			_this.render();
+		eventElement.addEventListener(EventTypes.EVENT_SEGUE_ADDED, function(ev){
+			// Update if a segue was added
+			_this.update();
 		});
-		// Maybe we should catch this.. :D
-		// loadTarget.dispatchEvent(new CustomEvent("segueChanged"));
+	}
+
+	/*
+	 * Removes the timeline from and all the child elements from the presentation
+	 */
+	this.remove = function(){
+		// Removes HTML elements
+		_this.htmlElement.remove();
+		_this.htmlElementName.remove();
+		// Tells the data class about it
+		if(data instanceof Data){
+			data.removeViewport(_this);
+		}
 	};
 
-
-	this.render = function(){
-		// Clears the containers
-		while(_timelineList.firstChild){
-			_timelineList.removeChild(_timelineList.firstChild);	
+	/*
+	 * Updates the UI
+	 * Readds all of the segues and updates width of the items.
+	 */
+	this.update = function(){
+		// Removes the segues html elements from the viewport
+		while(_this.htmlElement.firstChild){
+			_this.htmlElement.removeChild(_this.htmlElement.firstChild);
 		}
-		while(_timelineContainer.firstChild){
-			_timelineContainer.removeChild(_timelineContainer.firstChild);	
+
+		// Adding content to the timeline
+		var newMax = 0;
+		_this.segues.forEach(function(segue, index, arr){
+			_this.htmlElement.appendChild(segue.htmlElement);
+
+			var length = segue.getLength();
+			length = index < arr.length-1 ? arr[index+1].offset - segue.offset : length >= 0 ? length : 20;
+			segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (length * _scale) +'px';
+
+			var last = segue.offset + length;
+			if (last > newMax) {
+				newMax = last;
+			};
+		}, undefined);
+
+		// Checks if maxLength has changed
+		if(_maxTimelineLength != newMax){
+			_maxTimelineLength = newMax;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_TIMELINE_CHANGED, {detail: _this, bubbles:true}));
 		}
+	};
 
-		// Adds and removed class for when a child is focused
-		_timelineContainer.addEventListener("segueFocused", function(){
-			_timelineContainer.classList.add("focused");
+	// Building html. Non polluting method
+	(function(){
+		// Builds the name marker for the timeline, including the removebutton
+		// this.htmlElementName.innerHTML = 'VPP'; // TODO Get the name from WHERE? WTF!
+		var removeButton = document.createElement('a');
+		removeButton.innerHTML = 'X';
+		removeButton.addEventListener('click', function(e){
+			e.preventDefault();
+			_this.remove();
 		});
-		_timelineContainer.addEventListener("segueBlured", function(){
-			_timelineContainer.classList.add("focused");
-		});
+		_this.htmlElementName.appendChild(removeButton);
+	
+	
+		// Builds the Segue container
+		_this.htmlElement.className = "timeline";
 
-		// Value aligning the length of the timelines representation
-		var maxTimelineLength = 0;
-
-		// Generating the viewports
-		loadTarget.presentation.viewports.forEach(function(viewport, index){
-			// Add the viewport to the viewport list
-			var nameElement = document.createElement('div');
-			nameElement.innerHTML = '' + index;
-			var removeBtn = document.createElement('a');
-			removeBtn.innerHTML = 'X';
-			removeBtn.addEventListener('click', function(e){
+		// Adds and removes class for visual effects on the timeline
+		_this.htmlElement.addEventListener('dragenter', function(e){
+			this.classList.add('dragover');
+		}, true);
+		_this.htmlElement.addEventListener('dragleave', function(){
+			this.classList.remove('dragover');
+		}, false);
+	
+		// Sets up drag over settings
+		_this.htmlElement.addEventListener('dragover', function(e){
+			// Necessary. Allows us to drop.
+			if (e.preventDefault) {
 				e.preventDefault();
-				loadTarget.presentation.viewports.splice(index,1);
-				loadTarget.dispatchEvent(new CustomEvent("viewportAdded"));
-			});
-			nameElement.appendChild(removeBtn);
-			_timelineList.appendChild(nameElement);
-
-			// Add the timeline, it is the segue container
-			var timelineElement = document.createElement('div');
-			timelineElement.className = "timeline";
-
-			// Sets up drag over settings
-			timelineElement.addEventListener('dragover', function(e){
-				// Necessary. Allows us to drop.
-				if (e.preventDefault) {
-					e.preventDefault();
-				}
-				// Shows add icon on the cursor when over the drop zone
-				e.dataTransfer.dropEffect = 'copy';
-				return false;
-			}, false);
-			// Adds and removes class for visual effects on the timeline
-			timelineElement.addEventListener('dragenter', function(e){
-  				this.classList.add('dragover');
-			}, true);
-			timelineElement.addEventListener('dragleave', function(){
-  				this.classList.remove('dragover');
-			}, false);
-
-			// Handles element drop over the timeline
-			timelineElement.addEventListener('drop', function(e){
-				// Calculates the offset position based on the drop position
-				var position = Math.round((e.clientX - timelineElement.offsetLeft)/_scale);
-
-				// Finds whether a clear segue is needed
-				var clearSeguePosition = viewport.segues.reduceRight(function(cont, value){
-					// If no solution has been found. Go check.
-					if (typeof cont == "undefined" && value.getOffset() < position){
-						// Gets the source for the segue
-						var previousSource = value.getSource();
-						// console.debug(previousSource);
-						// Calculates the endposition of the last segue.
-						var previousSegueEndPosition = value.getOffset() + value.getLength();
-						// returns the endposition if a clear segue is needed
-						return typeof previousSource != "undefined" && previousSource.timed && previousSegueEndPosition < position ? previousSegueEndPosition : false;
-					}
-					// Passes on the result
-					return cont;
-				}, undefined);
-
-				// Fetches the dropped data
-				var transferData = e.dataTransfer.getData("text/plain");
-				
-				// Inserts a clearsegue if needed
-				if (typeof clearSeguePosition == "number" || transferData == "clear") {
-					viewport.segues.push(new Segue({
-						offset: (typeof clearSeguePosition == "number" ? clearSeguePosition : position),
-						action: "clear",
-					}));
-				} 
-
-				// If the segue dropped is a real source, add the segue
-				if (!isNaN(transferData)) {
-					var sourceIndex = parseInt(transferData);
-					var source = loadTarget.presentation.sources[sourceIndex];
-					console.debug();
-					var sg = new Segue({
-						offset: position,
-						action: "playfrom",
-						value: 0,
-						source: sourceIndex
-					}, source);
-					viewport.segues.push(sg);
-				}
-
-				// Order the segues by their offset.
-				viewport.segues.sort(function(a,b){
-					return a.offset-b.offset
-				});
-
-				// Dispatches event about the change
-				loadTarget.dispatchEvent(new CustomEvent("segueAdded"));
-			}, false);
-
-			// Adding the element to the DOM
-			viewport.htmlElement = timelineElement;
-			_timelineContainer.appendChild(timelineElement);
-
-			
-			// Adding content to the timeline
-			viewport.segues.forEach(function(segue, index, arr){
-				segue.initUI();
-				timelineElement.appendChild(segue.htmlElement);
-
-				var len = segue.getLength();
-				len = index < arr.length-1 ? arr[index+1].getOffset() - segue.getOffset() : len >= 0 ? len : 20;
-				segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (len * _scale) +'px';
-
-				var last = segue.getOffset() + len;
-				if (last > maxTimelineLength) {
-					maxTimelineLength = last;
-				};
-			}, undefined);
+			}
+			// Shows add icon on the cursor when over the drop zone
+			e.dataTransfer.dropEffect = 'copy';
+			return false;
+		}, false);
+		
+		// Update if a child segue has changed
+		_this.htmlElement.addEventListener(EventTypes.EVENT_SEGUE_CHANGED, function(ev){
+			console.debug(ev);
+			_this.update();
 		});
+	})();
 
-		loadTarget.presentation.viewports.forEach(function(viewport, index){
-			viewport.htmlElement.style.width = '' + (maxTimelineLength + 50) * 5 + 'px';
-		});
-
-		var addViewport = document.createElement('button');
-		addViewport.innerHTML = "+";
-		addViewport.addEventListener('click',function(){
-			loadTarget.presentation.viewports.push({segues:[]});
-			loadTarget.dispatchEvent(new CustomEvent("viewportAdded"));
-		});
-		_timelineList.appendChild(addViewport);
-	}
 };

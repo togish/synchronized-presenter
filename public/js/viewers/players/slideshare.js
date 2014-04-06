@@ -25,7 +25,8 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 	var _this = this;
 	var _status;
 	var _statusTarget;
-	var _viewer;
+	var _viewer;	
+
 
 	var updateStatus = function (status) {
 		if (_status == status) return false;
@@ -35,11 +36,13 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 	};
 
 	this.getRatio = function(){
-		return _viewer.getRatio;
+		return _viewer.getRatio();
 	};
 	this.setSize = function(height){
 		targetElement.height = height;
-		targetElement.width = height * _ratio;
+		targetElement.width = height * _this.getRatio();
+		console.debug("Slideshare ratio: " + _this.getRatio());
+		console.debug("Slideshare calc width: " + _this.getRatio() * height);
 	};
 
 

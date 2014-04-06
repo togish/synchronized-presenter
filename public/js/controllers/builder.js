@@ -12,129 +12,67 @@
  * Sets up the child elements
  */
 var Builder = function (containerElement) {
-	var _this = this;
-	window.bui = this;
-	var _containerElement = containerElement;
+	// Parameter validation
+	if(!(containerElement instanceof HTMLElement)){
+		throw 'Container element is not and instanceof HTMLElement';
+	}
 
 	// Proxy methods for event subscribe, remove and dispatch
-	this.addEventListener = function (a,b,c) {_containerElement.addEventListener(a,b,c);};
-	this.dispatchEvent = function(a){_containerElement.dispatchEvent(a);};
-	this.removeEventListener = function(a,b,c){_containerElement.removeEventListener(a,b,c);};
+	this.addEventListener = function (a,b,c) {containerElement.addEventListener(a,b,c);};
+	this.dispatchEvent = function(a){containerElement.dispatchEvent(a);};
+	this.removeEventListener = function(a,b,c){containerElement.removeEventListener(a,b,c);};
 
-	this.presentation = undefined;
+	// Clear the container
+	while(containerElement.firstChild){
+		containerElement.removeChild(containerElement.firstChild);	
+	}
 
-	/****************************
-	 * Tries to auto load the presentation dependent on the url parmeters
-	 */
-	this.loadAuto = function(){
-		var data = new Data(_this);
-		if(UrlParams.b64zip != undefined){
-			data.fromB64zip(UrlParams.b64zip);
-		} else if(UrlParams.url != undefined){
-			data.load(UrlParams.url);
-		} else {
-			data.create();
-			return false;
-		}
-		return true;
-	};
-
-	/****************************
-	 * Loads a presentation and updates the UI
-	 */
-	this.load = function(presentation){
-		// Prepare the presentation
-		_this.presentation = presentation;
-		window.pres = presentation;
-
-		_this.dispatchEvent(new CustomEvent("presentationLoaded", true, true));
-	};
-
-	// _containerElement.dispatchEvent(new Event(_this.EVENT_STATUS, {bubbles:true,cancelable:true}));
-
-
-	/****************************
-	 * Initializes the HTML structure for the app and attaches required submodules
-	 */
-	this.initUI = function(){
-		// Clear the container
-		while(containerElement.firstChild){
-			containerElement.removeChild(containerElement.firstChild);	
-		}
-
-		// Setting up the header block
-		var _blockHeader = document.createElement("div");
-		_blockHeader.className = 'block-header';
-
-		// Setting up the timeline section
-		var _blockData = document.createElement('div');
-		_blockData.className = 'block-data';
-		_blockData.innerHTML = '<button class="create">New</button><button class="save">Save</button><button class="load">Load</button><button class="link">Show</button>';
-
-		var _blockPreview = document.createElement('div');
-		_blockPreview.className = 'block-preview';
-		_blockPreview.innerHTML = 
-		'<div class="preview"><h2 style="background:hsl(195,100%,40%);"><span class="viewport">A</span><span class="source">YT - Teori</span></h2><div class="media"></div></div>' +
-		'<div class="preview"><h2 style="background:hsl(32,100%,50%);"> <span class="viewport">B</span><span class="source">SL - Teori</span></h2><div class="media"></div></div>';
-
-		// Setting up sources section
-		var _blockSources = document.createElement('div');
-		_blockSources.className = 'block-sources';
-
-		// Setting up the timeline section
-		var _blockTimeline = document.createElement('div');
-		_blockTimeline.className = 'block-timeline';
-
-		// Adding all of the elements to the UI
-		containerElement.appendChild(_blockHeader);
-		containerElement.appendChild(_blockData);
-		containerElement.appendChild(_blockPreview);
-		containerElement.appendChild(_blockSources);
-		containerElement.appendChild(_blockTimeline);
-
-		
-		/****************************
-		 * Setting up javascript "classes" in relation to the elements
-		 */
-		 
-		// TODO Set up listner for changes in the field and for changes from the presentation.
-
-		var titleInput = document.createElement('input');
-		titleInput.type = 'text';
-		titleInput.placeholder = 'Enter title here....';
-		titleInput.addEventListener('keyup', function(e){
-				if(e.keyCode == 13){
-					e.preventDefault();
-					titleInput.blur();
-				}
-		});
-		titleInput.addEventListener('blur', function(e){
-			if(typeof _this.presentation != "undefined"){
-				_this.presentation.title = titleInput.value;
-				console.debug("title set to: " + _this.presentation.title);
+	// Setting up the header block with title edit field
+	var blockHeader = document.createElement("div");
+	blockHeader.className = 'block-header';
+	
+	var titleInput = document.createElement('input');
+	titleInput.type = 'text';
+	titleInput.placeholder = 'Enter title here....';
+	titleInput.addEventListener('keyup', function(e){
+			if(e.keyCode == 13){
+				e.preventDefault();
+				titleInput.blur();
 			}
-		});
-		_this.addEventListener('presentationLoaded', function(){
-			console.debug("ready for title");
-			titleInput.value = _this.presentation.title;
-		});
-		_blockHeader.appendChild(titleInput);
+	});
+	titleInput.addEventListener('blur', function(e){
+		// _this.presentation.title = titleInput.value;
+	});
+	this.addEventListener("presentation loaded", function(){
+		// titleInput.value = "TO SET :D";
+	});
+	blockHeader.appendChild(titleInput);
+	containerElement.appendChild(blockHeader);
 
-		// Initiates the data object
-		var _data = new Data(_this);
-		_data.initUI(_blockData);
+	// Sets child modules
+	var data = new Data(containerElement);
+	// TODO Use a fucking different controlbar!
+	var controlBar = new ControlBar();
+	var presenter = new Presenter(containerElement, controlBar, data);
+	var sources = new Sources(containerElement);
+	var timelines = new Timelines(this);
 
-		// Initiates the sources object
-		var _sources = new Sources(_this);
-		_sources.initUI(_blockSources);
+	containerElement.appendChild(data.htmlElement);
 
-		// Initiates the timeline
-		var _timeline = new Timeline(_this);
-		_timeline.initUI(_blockTimeline);
-		window.tl = _timeline;
+	var presenterBlock = document.createElement('div');
+	presenterBlock.className = 'block-preview';
+	presenterBlock.appendChild(presenter.htmlElement);
+	containerElement.appendChild(presenterBlock);
 
-		/****************************
-		 * 
-		 */
-	};
-}
+	containerElement.appendChild(sources.htmlElement);
+	containerElement.appendChild(timelines.htmlElement);
+
+	data.loadAuto();
+
+	// Scope hax.
+	// var _this = this;
+	// var _containerElement = containerElement;
+	// this.EVENT_PRESENTATION_LOADED = 'PresentationLoaded';
+	// this.EVENT_SOURCE_REMOVED = 'SourceRemoved';
+	// this.EVENT_SEGUE_REMOVED = 'SegueRemoved';
+};
