@@ -42,10 +42,10 @@ var Data = function (eventElement) {
 	 */
 	this.removeViewport = function(timeline){
 		// Finding the source
-		var index = _this.presentation.viewports.indexOf(timeline);
+		var index = _this.presentation.timelines.indexOf(timeline);
 
 		// Checks if the index is out of bounds
-		if (index < 0 || _this.presentation.viewports.length <= index) {
+		if (index < 0 || _this.presentation.timelines.length <= index) {
 			return;
 		}
 
@@ -56,10 +56,14 @@ var Data = function (eventElement) {
 		}, false);
 
 		// Removes the source at the given index and fires event about the change
-		eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_REMOVED, {detail: _this.presentation.viewports.splice(index, 1)}));
+		_this.presentation.viewports.splice(index, 1)
+		eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_REMOVED, {detail: _this.presentation.timelines.splice(index, 1)}));
 	};
 	this.addViewport = function(){
-		// _this.dispatchEvent(new CustomEvent(_this.EVENT_SOURCE_ADDED, {detail: source}));
+		var viewport = new Viewport({segues:[]}, _this)
+		_this.presentation.viewports.push(viewport);
+		_this.presentation.timelines.push(new Timeline(viewport, _this));
+		_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_ADDED, {detail: viewport}));
 	};
 
 	/*
@@ -107,9 +111,6 @@ var Data = function (eventElement) {
 			eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SOURCE_REMOVED, {detail: viewport.segues.splice(index, 1)}));
 		});
 	};
-	this.addSegue = function(segue){
-		// _this.dispatchEvent(new CustomEvent(_this.EVENT_SOURCE_ADDED, {detail: source}));
-	};
 
 
 	/*
@@ -140,7 +141,21 @@ var Data = function (eventElement) {
 		// Returns the file string
 		return zip.generate();
 	};
-	
+
+	/*
+	 * Builds the presentation based on JSON encoded input
+	 */
+	this.fromJSON = function(json){
+		return _buildPresentation(json);
+	};
+
+	/*
+	 * Encodes the presentation to JSON
+	 */
+	this.toJSON = function(){
+		return _cleanPresentation();
+	};
+
 	/*
 	 * Loads the content of the url's destination into the presentation object
 	 */
@@ -201,7 +216,7 @@ var Data = function (eventElement) {
 		});
 		sinks.push({
 			text: "File:",
-			button: btnFile 
+			button: btnFile
 		});
 
 		// Building save to dropbox shit
@@ -357,9 +372,12 @@ var Data = function (eventElement) {
 				return false;
 			}
 
+			presentation.title = rawPresentation.title;
+
+			// Builds the cources
 			presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
+				rawSource.color = _this.colors[idx];
 				if(!(rawSource instanceof Source)){
-					rawSource.color = _this.colors[idx];
 					cont[idx] = new Source(rawSource, _this);
 				} else {
 					cont[idx] = rawSource;
@@ -367,11 +385,18 @@ var Data = function (eventElement) {
 				return cont;
 			}, []);
 
+			// Builds the viewports
 			presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
-				cont[idxViewport] = new Timeline({segues:rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
+				cont[idxViewport] = new Viewport({segues:rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
 						cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source], _this);
 						return cont;
 					}, [])}, _this);
+				return cont;
+			}, []);
+
+			// Builds the timelines
+			presentation.timelines = presentation.viewports.reduce(function(cont, viewport, idxViewport){
+				cont[idxViewport] = new Timeline(viewport, _this);
 				return cont;
 			}, []);
 		}
@@ -399,6 +424,7 @@ var Data = function (eventElement) {
 		// Preparing the clean presentation
 		var clean ={};
 		clean.title = _this.presentation.title;
+		
 		clean.sources = _this.presentation.sources.reduce(function(cont, s, idx){
 			cont[idx] = {
 				type: s.type,
@@ -412,19 +438,19 @@ var Data = function (eventElement) {
 		}, []);
 
 		clean.viewports = [];
-		_this.presentation.viewports.forEach(function(v){
+		_this.presentation.viewports.forEach(function(viewport){
 			var sgs = [];
-			v.segues.forEach(function(s){
+			viewport.segues.forEach(function(segue){
 				var ss = {
-					offset: s.offset,
-					action: s.action,
+					offset: segue.offset,
+					action: segue.action,
 				};
 
-				if(typeof s.value != "undefined"){
-					ss.value = s.value;
+				if(typeof segue.value != "undefined"){
+					ss.value = segue.value;
 				}
-				if(typeof s.source != "undefined"){
-					ss.source = clean.sources.indexOf(s.source);
+				if(typeof segue.source != "undefined"){
+					ss.source = _this.presentation.sources.indexOf(segue.source);
 				}
 
 				sgs.push(ss);
@@ -433,6 +459,7 @@ var Data = function (eventElement) {
 				segues: sgs,
 			});
 		});
+
 		var str = JSON.stringify(clean);
 		return str;
 	};
@@ -459,3 +486,26 @@ var Data = function (eventElement) {
 	}
 };
 
+
+var TestData = function(){
+	var ele = document.createElement('div');
+	var data = new Data(ele);
+
+	var json = '{"title":"Presentation","Horse":2929,"sources":[{"type":"youtube","title":"YT - Explanation told by lolmain","timed":true,"url":"https://www.youtube.com/watch?v=pHvP71rwYAc","length":240},{"type":"slideshare","title":"SL - Explanation","timed":false,"url":"http://www.slideshare.net/tor2608/presentation-for-syncronization-test","length":8},{"type":"slideshare","title":"SL - Correct code","timed":false,"url":"http://www.slideshare.net/tor2608/presentation-for-syncronization-test","length":8}],"viewports":[{"segues":[{"offset":0,"action":"playfrom","value":0,"source":0}]},{"segues":[{"offset":0,"action":"playfrom","value":0,"source":1},{"offset":3,"action":"playfrom","value":1,"source":1},{"offset":7,"action":"playfrom","value":2,"source":1},{"offset":10,"action":"playfrom","value":3,"source":1},{"offset":14,"action":"playfrom","value":4,"source":1},{"offset":18,"action":"playfrom","value":5,"source":1},{"offset":23,"action":"playfrom","value":6,"source":1}]}]}';
+	data.fromJSON(json);
+
+	var json2 = data.toJSON();
+	if(json == json2){
+		console.log("Input and output was the same.! Good!");
+	} else {
+		console.log("Something was stripped of in first round. That is ok!, cleaning works :D");
+	}
+
+	data.fromJSON(json2);
+	var json3 = data.toJSON();
+	if(json2 == json3){
+		console.log("Input and output was the same.! Good!");
+	} else {
+		console.log("Something was stripped of in second round. That is FAIL!");
+	}
+};

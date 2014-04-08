@@ -176,7 +176,6 @@ var Timeline = function (viewport, data) {
 		
 		// Update if a child segue has changed
 		_this.htmlElement.addEventListener(EventTypes.EVENT_SEGUE_CHANGED, function(ev){
-			console.debug(ev);
 			_this.update();
 		});
 	})();

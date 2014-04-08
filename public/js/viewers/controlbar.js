@@ -34,30 +34,37 @@ var ControlBar = function () {
 		var _btnPlayPause = document.createElement('button');
 		_btnPlayPause.className = "play-pause";
 		_this.htmlElement.appendChild(_btnPlayPause);
-		presentation.addEventListener(EventTypes.EVENT_STATUS, function(e){
+
+		var updateUI = function(e){
 			var percent = presentation.getCompletedPercent();
+			
 			_this.htmlElement.classList.remove("ready");
 			_this.htmlElement.classList.remove("playing");
 			ease(_progressBar, percent, 0);
-			if(presentation.getStatus() == StatusTypes.READY){
+			if(presentation.isReady()){
 				_this.htmlElement.classList.add("ready");
-			} else if(presentation.getStatus() == StatusTypes.PLAYING){
+			}
+			
+			if(presentation.isPlaying()){
 				_this.htmlElement.classList.add("playing");
 				ease(_progressBar, 100, presentation.getDuration() - presentation.getPosition());
 			}
-		}, false);
+		};
+
+		// presentation.addEventListener(EventTypes.EVENT_STATUS, , false);
 	
 		_btnPlayPause.addEventListener('click', function(){
-			console.debug(presentation.getStatus());
-			if(presentation.getStatus() == StatusTypes.READY){
+			if(presentation.isReady() && !presentation.isPlaying()){
+				console.log("play invoked");
 				presentation.play();
-			} else if(presentation.getStatus() == StatusTypes.PLAYING){
+			} else {
+				console.log("pause invoked");
 				presentation.pause();
 			}
 		});
 	
 		presentation.addEventListener(EventTypes.EVENT_DURATION, function(e){
-			console.log("UI EVENT_DURATION changed to: " + presentation.getDuration());
+			// console.log("UI EVENT_DURATION changed to: " + presentation.getDuration());
 		}, false);
 	}
 };

@@ -57,13 +57,38 @@ var SecondsToTime = function(rest, cont, multi){
 	return SecondsToTime(nRest, cont, multi-1);
 };
 
+
+var TestSecondsToTime = function(){
+	var test = function(inp, out){
+		var cal = SecondsToTime(inp);
+		if(cal != out){
+			console.log("Error---------------------------");
+			console.debug(inp)
+			console.debug(out)
+			console.debug(cal)
+		}
+	};
+
+	test(0, "0:00");
+	test(1, "0:01");
+	test(10, "0:10");
+	test(59, "0:59");
+	test(60, "1:00");
+	test(3661, "1:01:01");
+	test(43261, "12:01:01");
+	return "Test completed!";
+};
+
+
+
+
 var SomethingToSeconds = function(input, timed){
-	// For string representation. Parse and convert into seconds
+	// For string representation. Parse and convert into seconds or slides
 	if(typeof input == "string"){
 		var newValue = null;
 		var multiplier = [1, 60, 3600, 86400];
 		// I know fucking regular expressions! bitches!
-		newValue = timed ? input.match(/[0-9]+\:[0-5][0-9]/) : input.match(/[1-9][0-9]?|^[0]$/);
+		newValue = timed ? input.match(/^[0-9]+(?:\:[0-5]?[0-9])*$/) : input.match(/[1-9][0-9]*|^[0]$/);
 		// console.debug(newValue);
 		if(!(newValue == null || newValue.length > 1)){
 			// Set the value in the segue. Convert to seconds or slidenumber. Works either case.
@@ -75,6 +100,37 @@ var SomethingToSeconds = function(input, timed){
 	} else if(typeof input == "number"){
 		return input;
 	}
+};
+
+var TestSomethingToSeconds = function(){
+	var test = function(inp, out){
+		var cal = SomethingToSeconds(inp.input, inp.timed);
+		if(cal != out){
+			console.log("Error---------------------------");
+			console.debug(inp)
+			console.debug(out)
+			console.debug(cal)
+		}
+	};
+
+	test({input:"",timed:true}, undefined);
+	test({input:"0",timed:true}, 0);
+	test({input:"0:00",timed:true}, 0);
+	test({input:"0:0",timed:true}, 0);
+	test({input:"0:01",timed:true}, 1);
+	test({input:"0:1",timed:true}, 1);
+	test({input:"0:10",timed:true}, 10);
+	test({input:"0:59",timed:true}, 59);
+	test({input:"0:60",timed:true}, undefined);
+	test({input:"1:00",timed:true}, 60);
+	test({input:"1:01:01",timed:true}, 3661);
+	test({input:"12:01:01",timed:true}, 43261);
+
+	test({input:"0",timed:false}, 0);
+	test({input:"1",timed:false}, 1);
+	test({input:"2",timed:false}, 2);
+	test({input:"3",timed:false}, 3);
+	return "Test completed!";
 };
 
 
@@ -110,12 +166,19 @@ var EventTypes = {
 	EVENT_SEGUE_FOCUED: "jdjdosow",
 
 	EVENT_PRESENTER_STATUS: "statusChanged",
-	EVENT_PRESENTER_DURATION: "durationChanged"
+	EVENT_PRESENTER_DURATION: "durationChanged",
+
+	EVENT_PLAYER_STATUS_CHANGED: "sdasdadawsqwe",
+	EVENT_PLAYER_READYNESS_CHANGED: "sdpofkisoidjf",
+	
+	EVENT_VIEWPORT_STATUS_CHANGED: "sdasdadawsqwesds",
+	EVENT_VIEWPORT_READYNESS_CHANGED: "sdpofkisoidjfsds",
+	EVENT_VIEWPORT_PLAYER_CHANGED: "uhdiuhsdfiuhdshbyuffguydsiygfgudtrfy"
 };
 
 var StatusTypes = {
 	ERROR: "error",
 	LOADING: "loading",
-	READY: "ready",
+	PAUSED: "paused",
 	PLAYING: "playing"
 };

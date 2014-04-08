@@ -68,11 +68,4 @@ var Builder = function (containerElement) {
 	containerElement.appendChild(timelines.htmlElement);
 
 	data.loadAuto();
-
-	// Scope hax.
-	// var _this = this;
-	// var _containerElement = containerElement;
-	// this.EVENT_PRESENTATION_LOADED = 'PresentationLoaded';
-	// this.EVENT_SOURCE_REMOVED = 'SourceRemoved';
-	// this.EVENT_SEGUE_REMOVED = 'SegueRemoved';
 };

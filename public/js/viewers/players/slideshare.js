@@ -1,50 +1,23 @@
 /* jshint strict: false */
 /* exported SlideSharePlayer */
 /* global SlideShareViewer: false */
-var SlideSharePlayer = function(resource, targetElement, callback){
-	// The name of the platform integrated
-	this.TYPE = 'SlideShare';
-
-	// When the player is getting ready, or is buffering
-	this.LOADING = 'loading';
-
-	// When the player have had an error stopping the execution!
-	this.ERROR = 'error';
-
-	// When the player is ready for playback
-	this.READY = 'ready';
-
-	// When the player is going from ready to playback
-	this.CUED = 'cued';
-
-	// When the player is executing playback
-	this.PLAYING = 'playing';
-
-	this.htmlElement = targetElement;
-
+var SlideSharePlayer = function(resource){
 	var _this = this;
-	var _status;
-	var _statusTarget;
 	var _viewer;	
+	var _ready;
+	var _status = StatusTypes.LOADING;
+	var _statusTarget = StatusTypes.READY;
 
 
-	var updateStatus = function (status) {
-		if (_status == status) return false;
-		_status = status;
-		callback(_this, _status);
-		return true;
+	// Returns the players readyness
+	this.isReady = function(){
+		return _ready;
 	};
 
-	this.getRatio = function(){
-		return _viewer.getRatio();
+	// Returns the players current status
+	this.getStatus = function(){
+		return _status;
 	};
-	this.setSize = function(height){
-		targetElement.height = height;
-		targetElement.width = height * _this.getRatio();
-		console.debug("Slideshare ratio: " + _this.getRatio());
-		console.debug("Slideshare calc width: " + _this.getRatio() * height);
-	};
-
 
 	// Returns true if the resource is using timestamps
 	this.hasTimestamp = function(){
@@ -53,7 +26,7 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 
 	// Returns the position, could be slide number or timestamp.
 	this.getPosition = function(){
-		return _viewer.getPosition();
+		return _viewer.currentSlide();
 	};
 
 	// Returns the length of the player
@@ -61,40 +34,49 @@ var SlideSharePlayer = function(resource, targetElement, callback){
 		return _viewer.length();
 	};
 
-	// Returns the players current status
-	this.getStatus = function(){
-		return _status;
+	// Returns the aspect ratio of the player
+	this.getRatio = function(){
+		return _viewer.getRatio();
 	};
 
-	this.getStatusTarget = function(){
-		return _statusTarget;
+	// Sets the size of the player based on the height
+	this.setSize = function(height){
+		_this.htmlElement.style.height = height + 'px';
+		_this.htmlElement.style.width = height * _this.getRatio() + 'px';
 	};
 
 	// Starts the playback
 	this.play = function(){
-		// TODO Check of possible
-		_statusTarget = this.PLAYING;
-		if(_status !== undefined) updateStatus(_this.PLAYING);
+		if(_ready) _updateStatus(StatusTypes.PLAYING);
 	};
 
 	// Pauses the playback
 	this.pause = function(){
-		// TODO Check of possible
-		_statusTarget = this.READY;
-		if(_status !== undefined) updateStatus(_this.READY);
+		if(_ready) _updateStatus(StatusTypes.PAUSED);
 	};
 
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
-		// TODO Check of possible
 		_viewer.jumpTo(position);
 	};
 
-	this.init = function(){
-		updateStatus(_this.LOADING);
-		_viewer = new SlideShareViewer(resource.url, targetElement, {
-			readyCallback: function(){
-				updateStatus(_this.READY);
-			}});
+	var _updateStatus = function(status){
+		if(_status != status){
+			_status = status;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
 	};
+
+	(function(){
+		_this.htmlElement = document.createElement('div');
+		_this.htmlElement.className = 'player-slideshare';
+		_updateStatus(_this.LOADING);
+		_viewer = new SlideShareViewer(resource.url, _this.htmlElement, {readyCallback: function(){
+			if(!_ready){
+				_ready = true;
+				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+			}
+			_updateStatus(StatusTypes.PAUSED);
+		}});
+	})();
 };

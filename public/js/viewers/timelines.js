@@ -39,11 +39,11 @@ var Timelines = function (containerElement) {
 	// Renders the source list when the presentation is loaded
 	containerElement.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(ev){
 		data = ev.detail;
-		data.presentation.viewports.forEach(function(viewport, idx){
-			viewport.initUI(containerElement);
-			timelineList.appendChild(viewport.htmlElementName);
-			timelineContainer.appendChild(viewport.htmlElement);
-			viewport.update();
+		data.presentation.timelines.forEach(function(timeline, idx){
+			timeline.initUI(containerElement);
+			timelineList.appendChild(timeline.htmlElementName);
+			timelineContainer.appendChild(timeline.htmlElement);
+			timeline.update();
 		});
 	});
 
@@ -53,13 +53,13 @@ var Timelines = function (containerElement) {
 	});
 
 	timelineContainer.addEventListener(EventTypes.EVENT_TIMELINE_CHANGED, function(ev){
-		var maxLen = data.presentation.viewports.reduce(function(cont, viewport){
-			var len = viewport.getLength();
+		var maxLen = data.presentation.timelines.reduce(function(cont, timeline){
+			var len = timeline.getLength();
 			return cont < len ? len : cont;
 		}, 0);
-		data.presentation.viewports.forEach(function(viewport){
-			if(viewport.htmlElement instanceof HTMLElement){
-				viewport.htmlElement.style.width = '' + (maxLen + 50) * 5 + 'px';
+		data.presentation.timelines.forEach(function(timeline){
+			if(timeline.htmlElement instanceof HTMLElement){
+				timeline.htmlElement.style.width = '' + (maxLen + 50) * 5 + 'px';
 			}
 		});
 	});

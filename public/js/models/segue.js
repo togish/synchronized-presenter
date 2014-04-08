@@ -46,14 +46,13 @@ var Segue = function (segue, source, data) {
 	 * Tries to ajust the offset of a segue, relative to the current value. Returns true if success!
 	 */
 	this.ajustOffsetRelative = function(input){
-		_this.ajustOffset(segue.offset + input);
+		_this.ajustOffset(_this.offset + input);
 	};
 
 	/*
 	 * Tries to ajust the value of a segue. Returns true if success!
 	 */
 	this.ajustValue = function(input){
-		console.debug(input);
 		if(!_this.hasSource){
 			return false;
 		}
@@ -107,12 +106,12 @@ var Segue = function (segue, source, data) {
 	 * Updates the values in the UI
 	 */
 	this.updateUI = function(){
-		_segueOffset.value = SecondsToTime(segue.offset);
+		_segueOffset.value = SecondsToTime(_this.offset);
 		var inputLen = _segueOffset.value.length;
 		_segueOffset.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 
 		if(!_this.hasSource) return;
-		_segueValue.value = _this.timed ? SecondsToTime(segue.value) : segue.value;
+		_segueValue.value = _this.timed ? SecondsToTime(_this.value) : _this.value;
 		inputLen = _segueValue.value.length;
 		_segueValue.size = inputLen > 0 ? Math.round(inputLen / 2) : 2;
 	};
@@ -173,7 +172,8 @@ var Segue = function (segue, source, data) {
 				e.preventDefault();
 				relativeCallback(-1);
 			});
-			container.appendChild(sub);
+			// container.appendChild(sub);
+			
 			// Building html element for the value enter field
 			var input = document.createElement('input');
 			input.type = "text";
@@ -196,6 +196,7 @@ var Segue = function (segue, source, data) {
 				}
 			});
 			container.appendChild(input);
+			
 			// Building html element for the value ajust add
 			var add = document.createElement('a');
 			add.className = "add";
@@ -205,7 +206,7 @@ var Segue = function (segue, source, data) {
 				e.preventDefault();
 				relativeCallback(1);
 			});
-			container.appendChild(add);
+			// container.appendChild(add);
 			_this.htmlElement.appendChild(container);
 			return input;
 		};

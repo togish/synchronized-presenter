@@ -27,6 +27,7 @@
 		<script type="text/javascript" src="/public/js/viewers/data.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/sources.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/timeline.js"></script>
+		<script type="text/javascript" src="/public/js/viewers/viewport.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/timelines.js"></script>
 		<script type="text/javascript" src="/public/js/viewers/controlbar.js"></script>
 
@@ -37,6 +38,8 @@
 		function pageLoaded(){
 			if(UrlParams.build != undefined){
 				var builder = new Builder(document.body);
+			} else if(UrlParams.lol != undefined){
+				// Do fucking nothing :D LOL
 			} else {
 				function onYouTubeIframeAPIReady() {
 					console.debug("YT Ready");

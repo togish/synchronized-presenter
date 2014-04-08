@@ -30,55 +30,22 @@ var YouTubeHelpers = function(){
 
 
 
-var YouTubePlayer = function (resource, targetElement, callback) {
-	// The name of the platform integrated
-	this.TYPE = 'YouTube';
-	
-	// When the player is getting ready, or is buffering
-	this.LOADING = 'loading';
-
-	// When the player have had an error stopping the execution!
-	this.ERROR = 'error';
-
-	// When the player is ready for playback
-	this.READY = 'ready';
-
-	// When the player is going from ready to playback
-	this.CUED = 'cued';
-
-	// When the player is executing playback
-	this.PLAYING = 'playing';
-
-	this.htmlElement = targetElement;
-
+var YouTubePlayer = function (resource) {
 	var _this = this;
+	var _ready = {"meta": false,"player":false};
 	var _duration = 0;
-	var _status;
-	var _statusTarget;
-	var _videoId;
 	var _player;
-	var _readyMetadata = false;
-	var _readyVideo = false;
-	var _ratio = 16/9;
-	var _playerElement;
+	var _ratio;
+	var _status = StatusTypes.LOADING;
 
-	var updateStatus = function (status) {
-		if (_status == status) return false;
-		_status = status;
-		callback(_this, _status);
-		return true;
+	// Returns the players readyness
+	this.isReady = function(){
+		return _ready['meta'] && _ready['player'];
 	};
 
-	this.getRatio = function(){
-		return _ratio;
-	};
-	this.setSize = function(height){
-		var frame = _player.a;
-		frame.height = height;
-		frame.width = height * _ratio;
-
-		console.debug("Slideshare ratio: " + _this.getRatio());
-		console.debug("Slideshare calc width: " + _this.getRatio() * height);
+	// Returns the players current status
+	this.getStatus = function(){
+		return _status;
 	};
 
 	// Returns true if the resource is using timestamps
@@ -88,7 +55,6 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 
 	// Returns the position, could be slide number or timestamp.
 	this.getPosition = function(){
-		// TODO Check that YT player gives 0 unless it is at a position!
 		return _player.getCurrentTime();
 	};
 
@@ -97,55 +63,74 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 		return _duration;
 	};
 
-	// Returns the players current status
-	this.getStatus = function(){
-		return _status;
+	// Returns the aspect ratio of the player
+	this.getRatio = function(){
+		return _ratio;
 	};
 
-	this.getStatusTarget = function(){
-		return _statusTarget;
+	// Sets the size of the player based on the height
+	this.setSize = function(height){
+		if(!_this.isReady()){
+			return;
+		}
+		var frame= _player.a;
+		frame.height = height;
+		frame.width = height * _this.getRatio();
+		_this.htmlElement.style.height = height + 'px';
+		_this.htmlElement.style.width = height * _this.getRatio() + 'px';
 	};
 
 	// Starts the playback
 	this.play = function(){
-		if(_status != this.ERROR && _status != this.LOADING && _statusTarget != this.PLAYING) _player.playVideo();
-		_statusTarget = this.PLAYING;
+		_player.playVideo();
 	};
 
 	// Pauses the playback
 	this.pause = function(){
-		if(_status != this.ERROR && _status != this.LOADING && _statusTarget != this.READY) _player.pauseVideo();
-		_statusTarget = this.READY;
+		if (typeof _player.pauseVideo == "function") {
+			_player.pauseVideo();
+		};
 	};
 
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
 		if(_status != this.ERROR) _player.seekTo(position);
+		// TODO Do as the target status says?? Maybe..
 	};
 
-	var callbackTryReady = function(){
-		if(_readyMetadata && _readyVideo) updateStatus(_this.READY);
+	var _updateStatus = function(status){
+		if(_status != status){
+			_status = status;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+	};
+	var _updateReady = function(src, status){
+		var readyBefore = _this.isReady();
+		_ready[src] = status;
+		if(_this.isReady() != readyBefore){
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
 	};
 
+	(function(){
+		_this.htmlElement = document.createElement('div');
+		_this.htmlElement.className = 'player-youtube';
 
-	this.init = function(){
-		updateStatus(_this.LOADING);
-		_videoId = YouTubeHelpers.parseUrl(resource.url);
-	
-		YouTubeHelpers.loadMetadata(_videoId, function(data){
-			_duration = data.duration;
-			_ratio = typeof data.aspectRatio == "string" && data.aspectRatio == "widescreen"?16/9:4/3;
-			_readyMetadata = true;
-			callbackTryReady();
+		var videoId = YouTubeHelpers.parseUrl(resource.url);
+		YouTubeHelpers.loadMetadata(videoId, function(data){
+			_ratio = typeof data.aspectRatio == "string" && data.aspectRatio == "widescreen" ? 16/9 : 4/3;
+			_duration = data.duration
+			_updateReady("meta", true);
 		});
 
 		// Construct the player
-		_playerElement = document.createElement('div');
-		targetElement.appendChild(_playerElement);
-		_player = new YT.Player(_playerElement, {
-			height: '360', // TODO Detect the size of the viewport!
+		var playerElement = document.createElement('div');
+		_this.htmlElement.appendChild(playerElement);
+
+		_player = new YT.Player(playerElement, {
+			height: '360',
 			width: '640',
-			videoId: _videoId,
+			videoId: videoId,
 			playerVars: {
 				showinfo:0,	// Hides information
 				rel:0,	// Hides related videos at end
@@ -157,26 +142,30 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 			},
 			events: {
 				'onReady': function(){
-					_readyVideo = true;
-					callbackTryReady();
+					_updateReady("player", true);
+					_updateStatus(StatusTypes.PAUSED); // Ready and paused
 				},
 				'onStateChange': function(s){
 					var c = s.data;
 					// -1 (unstarted), 3 (buffering)
-					if(c == -1 || c == 3) updateStatus(_this.LOADING);
-
-					// 0 (ended), 2 (paused)
-					else if(c === 0 || c == 2) updateStatus(_this.READY);
-					
-					// 5 (video cued).
-					else if(c == 5) updateStatus(_this.CUED);
-					
+					if(c == -1 || c == 3){
+						_updateReady("player", false);
+						_updateStatus(StatusTypes.LOADING); // Not ready and paused
+					}
+					// 0 (ended), 2 (paused), 5 (cued)
+					else if(c === 0 || c == 2 || c == 5){
+						_updateReady("player", true);
+						_updateStatus(StatusTypes.PAUSED); // Ready and paused
+					}				
 					// 1 (playing)
-					else if(c == 1) updateStatus(_this.PLAYING);
+					else if(c == 1) {
+						_updateReady("player", true);
+						_updateStatus(StatusTypes.PLAYING); // Ready and playing
+					}
 				},
 				'onError': function(e){
-					console.log('' + e);
-					updateStatus(_this.ERROR);
+					_updateReady("player", false);
+					_updateStatus(StatusTypes.ERROR); // Not ready and paused
 					//  This event fires if an error occurs in the player. The value that the API passes to the event listener function will be an integer that identifies the type of error that occurred. Possible values are:
 					//  2 – The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.
 					//  100 – The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.
@@ -185,5 +174,5 @@ var YouTubePlayer = function (resource, targetElement, callback) {
 				}
 			}
 		});
-	};
+	})();
 };
