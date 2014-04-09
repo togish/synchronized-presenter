@@ -205,14 +205,14 @@ var Presenter = function (containerElement, controlBar, data) {
 		};
 
 		var fillContainer = function(){
-			// Empty the presenter
-			while(_viewportContainer.firstChild){
-				_viewportContainer.removeChild(_viewportContainer.firstChild);
-			}
-
 			// Fill it again.
 			data.presentation.viewports.forEach(function(viewport, viewportIdx){
-				_viewportContainer.appendChild(viewport.htmlElement);
+				// todo check if not there allready
+				var found = false;
+				for (var i = 0;i < _viewportContainer.children.length; i++) {
+					if(_viewportContainer.children[i] === viewport.htmlElement) found = true;
+				};
+				if(!found) _viewportContainer.appendChild(viewport.htmlElement);
 			});
 			_updateRatio();
 		};

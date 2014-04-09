@@ -92,6 +92,7 @@ var Timeline = function (viewport, data) {
 		// Removes HTML elements
 		_this.htmlElement.remove();
 		_this.htmlElementName.remove();
+		viewport.htmlElement.remove();
 		// Tells the data class about it
 		if(data instanceof Data){
 			data.removeViewport(_this);
