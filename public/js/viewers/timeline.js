@@ -22,7 +22,8 @@ var Timeline = function (viewport, data) {
 		// Handles element drop over the timeline
 		_this.htmlElement.addEventListener('drop', function(e){
 			// Calculates the offset position based on the drop position
-			var position = Math.round(e.offsetX/_scale);
+			var offsetNew = e.offsetX + e.target.offsetLeft - _this.htmlElement.offsetLeft;
+			var position = Math.round(offsetNew/_scale);
 
 			// Finds whether a clear segue is needed
 			var clearSeguePosition = viewport.segues.reduceRight(function(cont, segue){
@@ -59,9 +60,6 @@ var Timeline = function (viewport, data) {
 				}, _lastDraggedSource);
 				viewport.addSegue(segue);
 			}
-
-			console.debug(clearSegue);
-			console.debug(segue);
 
 			// Dispatches event about the change
 			if(clearSegue){
