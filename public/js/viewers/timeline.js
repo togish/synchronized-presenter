@@ -50,7 +50,7 @@ var Timeline = function (viewport, data) {
 					offset: (typeof clearSeguePosition == "number" ? clearSeguePosition : position),
 					action: "clear",
 				});
-				viewport.segues.push(clearSegue);
+				viewport.addSegue(clearSegue);
 			}
 
 			// If the segue dropped is a real source, add the segue
@@ -60,7 +60,7 @@ var Timeline = function (viewport, data) {
 					action: "playfrom",
 					value: 0
 				}, _lastDraggedSource);
-				viewport.segues.push(segue);
+				viewport.addSegue(segue);
 			}
 
 			// Order the segues by their offset.

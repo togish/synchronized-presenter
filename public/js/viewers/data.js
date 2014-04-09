@@ -60,10 +60,12 @@ var Data = function (eventElement) {
 		eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_REMOVED, {detail: _this.presentation.timelines.splice(index, 1)}));
 	};
 	this.addViewport = function(){
-		var viewport = new Viewport({segues:[]}, _this)
+		var viewport = new Viewport({segues:[]}, _this);
+		var timeline = new Timeline(viewport, _this);
 		_this.presentation.viewports.push(viewport);
-		_this.presentation.timelines.push(new Timeline(viewport, _this));
-		_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_ADDED, {detail: viewport}));
+		_this.presentation.timelines.push(timeline);
+		eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_ADDED, {detail: viewport}));
+		eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_TIMELINE_ADDED, {detail: timeline}));
 	};
 
 	/*
@@ -282,11 +284,11 @@ var Data = function (eventElement) {
 	this.loadAuto = function(){
 		// Loads presentation if possible
 		if(typeof UrlParams.b64zip == "string"){
-			this.fromB64zip(UrlParams.b64zip);
-		} else if(typeof UrlParams.url != "string"){
-			this.fromUrl(UrlParams.url);
+			_this.fromB64zip(UrlParams.b64zip);
+		} else if(typeof UrlParams.url == "string"){
+			_this.fromUrl(UrlParams.url);
 		} else {
-			this.newPresentation();
+			_this.newPresentation();
 		}
 	};
 
@@ -358,48 +360,48 @@ var Data = function (eventElement) {
 	 * Loads the presentation into the loadTarget
 	 */
 	var _buildPresentation = function(presentationText){
-		var presentation = {
-			title: "",
-			sources:[],
-			viewports:[{segues:[]}]
-		};
+		var presentation = {};
 
-		if(typeof presentationText == "string"){
-			try{
-				var rawPresentation = JSON.parse(presentationText);
-			} catch(e){
-				alert("Could not load presentation!\r\n- The format is invalid!");
-				return false;
-			}
-
-			presentation.title = rawPresentation.title;
-
-			// Builds the cources
-			presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
-				rawSource.color = _this.colors[idx];
-				if(!(rawSource instanceof Source)){
-					cont[idx] = new Source(rawSource, _this);
-				} else {
-					cont[idx] = rawSource;
-				}
-				return cont;
-			}, []);
-
-			// Builds the viewports
-			presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
-				cont[idxViewport] = new Viewport({segues:rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
-						cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source], _this);
-						return cont;
-					}, [])}, _this);
-				return cont;
-			}, []);
-
-			// Builds the timelines
-			presentation.timelines = presentation.viewports.reduce(function(cont, viewport, idxViewport){
-				cont[idxViewport] = new Timeline(viewport, _this);
-				return cont;
-			}, []);
+		// Default to a clean presentation
+		if(typeof presentationText != "string"){
+			presentationText = '{"title":"","sources":[],"viewports":[{"segues":[]}]}';
 		}
+
+		// Parse the presentation text
+		try{
+			var rawPresentation = JSON.parse(presentationText);
+		} catch(e){
+			alert("Could not load presentation!\r\n- The format is invalid!");
+			return false;
+		}
+
+		presentation.title = rawPresentation.title;
+
+		// Builds the cources
+		presentation.sources = rawPresentation.sources.reduce(function(cont, rawSource, idx, arr){
+			rawSource.color = _this.colors[idx];
+			if(!(rawSource instanceof Source)){
+				cont[idx] = new Source(rawSource, _this);
+			} else {
+				cont[idx] = rawSource;
+			}
+			return cont;
+		}, []);
+
+		// Builds the viewports
+		presentation.viewports = rawPresentation.viewports.reduce(function(cont, rawViewport, idxViewport){
+			cont[idxViewport] = new Viewport({segues:rawViewport.segues.reduce(function(cont, rawSegue, idxSegue){
+					cont[idxSegue] = new Segue(rawSegue, presentation.sources[rawSegue.source], _this);
+					return cont;
+				}, [])}, _this);
+			return cont;
+		}, []);
+
+		// Builds the timelines
+		presentation.timelines = presentation.viewports.reduce(function(cont, viewport, idxViewport){
+			cont[idxViewport] = new Timeline(viewport, _this);
+			return cont;
+		}, []);
 
 		// In the case there is a dialog, then dispose it.
 		_disposeFade();

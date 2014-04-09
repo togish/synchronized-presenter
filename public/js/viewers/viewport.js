@@ -7,17 +7,26 @@
 
 var Viewport = function (viewportObject) {
 	this.segues = viewportObject.segues;
+	this.htmlElement = document.createElement('div');
 	
 	var _this = this;
 	var _playing = false;
 
+	var _playersInitiated = false;
 	var _currentPlayer;
 	var _sources = [];
 	var _players = [];
-	var _playersInitiated = false;
 
 	var _timer;
 	var _timerNext;
+
+	/*
+	 * Adds a segue to the viewport
+	 */
+	this.addSegue = function(segue){
+		viewportObject.segues.push(segue);
+		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_ADDED, {detail: segue, bubbles:true, cancelable:true}));
+	};
 
 	/*
 	 * Returns the current players ratio
@@ -82,19 +91,16 @@ var Viewport = function (viewportObject) {
 		}
 		_timer = setTimeout(function(){
 			var playerPos = _sources.indexOf(currentSegue.source);
+
+			// Fail securing
+			if (playerPos == -1) return;
 			if(_currentPlayer !== _players[playerPos]){
 				_currentPlayer = _players[playerPos];
-				// hide unneeded players
-				_players.forEach(function(player){
-					if(player === _currentPlayer){
-						player.htmlElement.style.display = 'block';
-					} else {
-						player.htmlElement.style.display = 'none';
-					}
-				});
 				// if changed fire event about that, let the parent resize and arrange
+				_showOnlyCurrentViewport();
 				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_PLAYER_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
 			}
+
 			_currentPlayer.seek(value);
 			_currentPlayer.play();
 		}, timeout * 1000);
@@ -126,57 +132,64 @@ var Viewport = function (viewportObject) {
 		});
 	};
 
+	var _setupSource = function(source){
+		if(_sources.indexOf(source) == -1){
+			var pos = _sources.push(source) - 1;
+			if(source.type == "slideshare"){
+				_players[pos] = new SlideSharePlayer(source);
+			} else if(source.type == "youtube"){
+				_players[pos] = new YouTubePlayer(source);
+			} else if(source.type == "pdfjs"){
+				_players[pos] = new PdfJsPlayer(source);
+			} else {
+				// Remove that sh** again!
+				_sources.splice(pos,1);
+				return;
+			}
+			_this.htmlElement.appendChild(_players[pos].htmlElement);
+		}
+	};
+
+	var _showOnlyCurrentViewport = function(){
+		// hide unneeded players
+		_players.forEach(function(player){
+			player.htmlElement.style.display = _currentPlayer === player ? 'block' : 'none';
+		});
+	};
+
+	var _updatePlaying = function(playing){
+		if(_playing != playing){
+			_playing = playing;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+	};
+
+	var _lastReadyness = false;
+	var _checkReadyness = function(){
+		var newReadyness = _this.isReady();
+		if(_playersInitiated && newReadyness != _lastReadyness){
+			_lastReadyness = newReadyness;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+	};
+
+
 	(function(){
-		_this.htmlElement = document.createElement('div');
 		_this.htmlElement.className = 'viewport';
 
 		// Setting up the listner for child state changes
 		_this.htmlElement.addEventListener(EventTypes.EVENT_PLAYER_READYNESS_CHANGED ,function(ev){
-			if(_this.isReady() && _playersInitiated){
-				_players.forEach(function(player, idx){
-					if(idx>0){
-						player.htmlElement.style.display = 'none';
-					} else {
-						_currentPlayer = player;
-					}
-				});
-				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
-			}
-		});
-
-		// Childplayer autonomus state changes should be handled.! LOL
-		_this.htmlElement.addEventListener(EventTypes.EVENT_PLAYER_STATUS_CHANGED, function(ev){
-			
-			
-			//var player = ev.detail;
-			//if(_playing && player === _currentPlayer && player.getStatus() != StatusTypes.PLAYING && player.isReady()){
-			//	// Force start.. Maybe handle this a little better. Is it still ready??
-			//	console.log("force start: is YT? " + (player instanceof YouTubePlayer));
-			//	console.debug(player);
-			//	player.play();
-			//} else if(player !== _currentPlayer && player.getStatus() == StatusTypes.PLAYING){
-			//	console.log("force pause: is YT? " + (player instanceof YouTubePlayer));
-			//	player.pause();
-			//}
+			_checkReadyness();
 		});
 
 		// Set up the players needed
-		_sources = viewportObject.segues.reduce(function(cont, segue){
-			var source = segue.source;
-			if(cont.indexOf(source) == -1){
-				cont.push(source);
-				var pos = cont.length - 1;
-				if(source.type == "slideshare"){
-					_players[pos] = new SlideSharePlayer(source);
-				} else if(source.type == "youtube"){
-					_players[pos] = new YouTubePlayer(source);
-				} else if(source.type == "pdfjs"){
-					_players[pos] = new PdfJsPlayer(source, sourceElement, childCallback);
-				}
-				_this.htmlElement.appendChild(_players[pos].htmlElement);
-			}
+		viewportObject.segues.reduce(function(cont, segue){
+			_setupSource(segue.source);
 			return cont;
-		}, []);
+		}, undefined);
+		_currentPlayer = _players[0];
+		_showOnlyCurrentViewport();
 		_playersInitiated = true;
+		_checkReadyness();
 	})();
 };

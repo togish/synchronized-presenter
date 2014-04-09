@@ -3,50 +3,26 @@
 // The interface is closure based!
 
 // Defines a player wrapper
-var PdfJsPlayer = function(resource, targetElement, callback){
-	// The name of the platform integrated
-	this.TYPE = 'pdfjs';
-
-	// When the player is getting ready, or is buffering
-	this.LOADING = 'loading';
-
-	// When the player have had an error stopping the execution!
-	this.ERROR = 'error';
-
-	// When the player is ready for playback
-	this.READY = 'ready';
-
-	// When the player is going from ready to playback
-	this.CUED = 'cued';
-
-	// When the player is executing playback
-	this.PLAYING = 'playing';
-
-	this.htmlElement = targetElement;
-
+var PdfJsPlayer = function(resource){
 	var _this = this;
-
-	// Example:
-	// callback(this, this.PLAYING);
 	var _numOfPages = 0;
 	var _current = 0;
-	var _status;
-	var _canvas;
+	var _playing = false;
+	var _ready = false;
 	var _ratio = 4/3;
-	var _targetHeight = 1;
+	var _targetHeight = 100;
+	var _canvas;
+	var _page;
+	var _pdf;
 
-	var _renderPage = function(pageNo){
-		console.log("Starting to render page");
-		_pdf.getPage(pageNo).then(function(page) {
-			var viewport = page.getViewport(1);
-			viewport = page.getViewport(_targetHeight/viewport.height);
-			_canvas.height = _targetHeight;
-			_canvas.width = _targetHeight * _ratio;
-			page.render({
-				canvasContext: _canvas.getContext('2d'), 
-				viewport: viewport
-			});
-		});
+	// Returns the players readyness
+	this.isReady = function(){
+		return _ready;
+	};
+
+	// Returns the players current status
+	this.isPlaying = function(){
+		return _playing;
 	};
 
 	// Returns true if the resource is using timestamps
@@ -54,74 +30,90 @@ var PdfJsPlayer = function(resource, targetElement, callback){
 		return false;
 	};
 
-	this.getRatio = function(){
-		return _ratio;
+	// Returns the length of the player
+	this.getDuration = function(){
+		return _numOfPages;
 	};
-	this.setSize = function(height){
-		targetElement.style.height = height;
-		targetElement.style.width = height * _ratio;
-		_targetHeight = height;
-		_renderPage(_current);
-	};
-
 
 	// Returns the position, could be slide number or timestamp.
 	this.getPosition = function(){
 		return _current;
 	};
 
-	// Returns the length of the player
-	this.getDuration = function(){
-		return _numOfPages;
+	// Returns the aspect ratio of the player
+	this.getRatio = function(){
+		return _ratio;
 	};
 
-
-	// Returns the players current status
-	this.getStatus = function(){
-		return _status;
+	// Sets the size of the player based on the height
+	this.setSize = function(height){
+		_this.htmlElement.style.height = height;
+		_this.htmlElement.style.width = height * _ratio;
+		_targetHeight = height;
+		_renderPage();
 	};
-
-	// 
-	this.getStatusTarget = function(){
-		return _statusTarget;
-	};
+	window.ses = this.setSize;
 
 	// Starts the playback
 	this.play = function(){
-		// TODO Check of possible
-		_statusTarget = this.PLAYING;
-		if(_status !== undefined) updateStatus(_this.PLAYING);
+		if(_ready) _updatePlaying(true);
 	};
 
 	// Pauses the playback
 	this.pause = function(){
-		// TODO Check of possible
-		_statusTarget = this.READY;
-		if(_status !== undefined) updateStatus(_this.READY);
+		_updatePlaying(false);
 	};
-
 
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
 		if (position >= _numOfPages || position < 0) return;
-		_renderPage(position);
-		_current = position;
+		_pdf.getPage(position).then(function(page) {
+			_page = page;
+			_renderPage();
+			_current = position;
+		});
 	};
 
-	this.init = function(){
+	var _updatePlaying = function(playing){
+		if(_playing != playing){
+			_playing = playing;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+	};
+
+	var _updateReady = function(ready){
+		if(_ready != ready){
+			_ready = ready;
+			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+	};
+
+
+	var _renderPage = function(){
+		// Initial load of viewport
+		var viewport = _page.getViewport(1);
+		// Ajusted viewport
+		viewport = _page.getViewport(_targetHeight/viewport.height);
+		_canvas.height = _targetHeight;
+		_canvas.width = _targetHeight * _ratio;
+		_page.render({
+			canvasContext: _canvas.getContext('2d'), 
+			viewport: viewport
+		});
+	};
+
+	(function(){
 		// Grap the url from the configuration
+		_this.htmlElement = document.createElement('div');
 		_canvas = document.createElement('canvas');
-		targetElement.appendChild(_canvas);
+		_this.htmlElement.appendChild(_canvas);
 		PDFJS.getDocument(resource.url).then(function(pdf) {
 			_pdf = pdf;
 			_numOfPages = pdf.numPages;
-			console.log("PDF loaded");
-			_renderPage(1);
+			_this.seek(1);
+			_updateReady(true);
 			// Run through all and find most frequent
 			// _ratio = viewport.width/viewport.height;
-			if(typeof callback == "function"){
-				callback(_this, _this.READY);
-			}
 		});
-	};
+	})();
 };

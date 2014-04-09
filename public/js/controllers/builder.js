@@ -54,7 +54,7 @@ var Builder = function (containerElement) {
 	// TODO Use a fucking different controlbar!
 	var controlBar = new ControlBar();
 	var presenter = new Presenter(containerElement, controlBar, data);
-	var sources = new Sources(containerElement);
+	var sources = new Sources(containerElement, data);
 	var timelines = new Timelines(this);
 
 	containerElement.appendChild(data.htmlElement);
@@ -68,4 +68,5 @@ var Builder = function (containerElement) {
 	containerElement.appendChild(timelines.htmlElement);
 
 	data.loadAuto();
+	window.d = data;
 };

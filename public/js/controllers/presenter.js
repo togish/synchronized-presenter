@@ -155,12 +155,43 @@ var Presenter = function (containerElement, controlBar, data) {
 			}
 		}, false);
 
-		_this.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(ev){
-			data = ev.detail;
+		var fillContainer = function(){
+			// Empty the presenter
+			while(_viewportContainer.firstChild){
+				_viewportContainer.removeChild(_viewportContainer.firstChild);
+			}
+
+			// Fill it again.
 			data.presentation.viewports.forEach(function(viewport, viewportIdx){
 				_viewportContainer.appendChild(viewport.htmlElement);
 			});
+		};
+
+		_this.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(ev){
+			data = ev.detail;
+			fillContainer();
 		});
+
+		_this.addEventListener(EventTypes.EVENT_VIEWPORT_ADDED, function(ev){
+			fillContainer();
+		});
+		_this.addEventListener(EventTypes.EVENT_VIEWPORT_REMOVED, function(ev){
+			fillContainer();
+		});
+
+
+		_this.addEventListener(EventTypes.EVENT_SEGUE_ADDED, function(ev){
+
+		});
+		_this.addEventListener(EventTypes.EVENT_SEGUE_REMOVED, function(ev){
+		});
+		_this.addEventListener(EventTypes.EVENT_SEGUE_CHANGED, function(ev){
+		});
+
+		// Handle when a timeline is added or removed
+			// Invoke the same method as when a presentation is loaded, except for the update data reference
+		// Handle when a segue is added or changed
+			// Play pause trick
 
 		if(!_hasExternalData){
 			data.loadAuto();

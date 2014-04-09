@@ -60,10 +60,10 @@ var Sources = function (contanerElement) {
 	 * Adds a source, based on the url, to the presentation
 	 */
 	this.addSource = function(url){
-		if(!(data instanceof Data)) {
+		if(!(_data instanceof Data)) {
 			return;
 		}
-		
+
 		// Tries if it is a youtube link
 		var youtubeVidId = YouTubeHelpers.parseUrl(url);
 		if(typeof youtubeVidId == "string"){
@@ -76,9 +76,10 @@ var Sources = function (contanerElement) {
 					url: url,
 					title: d.title,
 					length: d.duration,
-					color: data.colors[data.presentation.sources.length]
+					color: _data.colors[_data.presentation.sources.length]
 				};
-				data.addSource(new Source(source, data));
+				_data.addSource(new Source(source, _data));
+				addSourceInput.value = "";
 			});
 		} else if (url.match(/\.slideshare\.net/i)){
 			var callback = function(){
@@ -88,9 +89,10 @@ var Sources = function (contanerElement) {
 					url: url,
 					title: slideShare.presentation.title,
 					length: slideShare.length(),
-					color: data.colors[data.presentation.sources.length]
+					color: _data.colors[_data.presentation.sources.length]
 				};
-				data.addSource(new Source(source, data));
+				_data.addSource(new Source(source, _data));
+				addSourceInput.value = "";
 			};
 			var slideShare = new SlideShareViewer(url,document.createElement("div"),{readyCallback: callback});
 		} else if (url.match(/.*\.pdf$/i)){
@@ -100,21 +102,27 @@ var Sources = function (contanerElement) {
 				filename = filename.substring(m[0].length);
 			}
 
-			var res = {
+			var source = new Source({
 				type: "pdfjs",
 				timed: false,
 				url: url,
 				title: filename,
-				color: data.colors[data.presentation.sources.length]
-			};
+				color: _data.colors[_data.presentation.sources.length]
+			}, _data);
 
-			var c = function(pp){
-				res.length = pp.getDuration();
-				data.addSource(new Source(source, data));
-			};
-
-			var pdf = new PdfJsPlayer(res, document.createElement("div"), c);
-			pdf.init();
+			var player = new PdfJsPlayer(source);
+			player.htmlElement.addEventListener(EventTypes.EVENT_PLAYER_READYNESS_CHANGED, function(){
+				source = new Source({
+					type: "pdfjs",
+					timed: false,
+					url: url,
+					title: filename,
+					length: player.getDuration(),
+					color: _data.colors[_data.presentation.sources.length]
+				}, _data);
+				_data.addSource(source);
+				addSourceInput.value = "";
+			});
 		} else {
 			console.debug("No alternative found");
 		}

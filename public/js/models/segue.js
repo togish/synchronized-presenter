@@ -27,11 +27,11 @@ var Segue = function (segue, source, data) {
 	 */
 	this.ajustOffset = function(input){
 		// Save the current value as a fallback for invalid input
-		var newValue = SomethingToSeconds(input);
+		var newValue = SomethingToSeconds(input, true);
 
 		// Checks if possible to perform the change
 		var ret = false;
-		if(typeof newValue != "undefined" && 0 <= newValue){
+		if(typeof newValue == "number" && 0 <= newValue){
 			_this.offset = newValue;
 			ret = true;
 		}
@@ -62,7 +62,7 @@ var Segue = function (segue, source, data) {
 
 		// Checks if possible to perform the change
 		var ret = false;
-		if(typeof newValue != "undefined" && 0 <= newValue && newValue < source.length){
+		if(typeof newValue == "number" && 0 <= newValue && newValue < source.length){
 			_this.value = newValue;
 			ret = true;
 		}
@@ -80,8 +80,7 @@ var Segue = function (segue, source, data) {
 		if(!_this.hasSource){
 			return false;
 		}
-		console.debug(segue.value + rel);
-		_this.ajustValue(segue.value + rel);
+		_this.ajustValue(_this.value + rel);
 	};
 
 	/*
@@ -164,14 +163,14 @@ var Segue = function (segue, source, data) {
 				input.focus();
 			});
 			// Adds offset substraction button
-			var sub = document.createElement('a');
-			sub.className = "sub";
-			sub.innerHTML = "-";
-			sub.addEventListener('click', function(e){
-				//e.stopPropagation();
-				e.preventDefault();
-				relativeCallback(-1);
-			});
+			// var sub = document.createElement('a');
+			// sub.className = "sub";
+			// sub.innerHTML = "-";
+			// sub.addEventListener('click', function(e){
+			// 	//e.stopPropagation();
+			// 	e.preventDefault();
+			// 	relativeCallback(-1);
+			// });
 			// container.appendChild(sub);
 			
 			// Building html element for the value enter field
@@ -198,14 +197,14 @@ var Segue = function (segue, source, data) {
 			container.appendChild(input);
 			
 			// Building html element for the value ajust add
-			var add = document.createElement('a');
-			add.className = "add";
-			add.innerHTML = "+";
-			add.addEventListener('click', function(e){
-				e.stopPropagation();
-				e.preventDefault();
-				relativeCallback(1);
-			});
+			// var add = document.createElement('a');
+			// add.className = "add";
+			// add.innerHTML = "+";
+			// add.addEventListener('click', function(e){
+			// 	e.stopPropagation();
+			// 	e.preventDefault();
+			// 	relativeCallback(1);
+			// });
 			// container.appendChild(add);
 			_this.htmlElement.appendChild(container);
 			return input;

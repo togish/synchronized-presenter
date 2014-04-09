@@ -57,7 +57,6 @@ var SecondsToTime = function(rest, cont, multi){
 	return SecondsToTime(nRest, cont, multi-1);
 };
 
-
 var TestSecondsToTime = function(){
 	var test = function(inp, out){
 		var cal = SecondsToTime(inp);
@@ -78,9 +77,6 @@ var TestSecondsToTime = function(){
 	test(43261, "12:01:01");
 	return "Test completed!";
 };
-
-
-
 
 var SomethingToSeconds = function(input, timed){
 	// For string representation. Parse and convert into seconds or slides
@@ -126,10 +122,12 @@ var TestSomethingToSeconds = function(){
 	test({input:"1:01:01",timed:true}, 3661);
 	test({input:"12:01:01",timed:true}, 43261);
 
-	test({input:"0",timed:false}, 0);
-	test({input:"1",timed:false}, 1);
-	test({input:"2",timed:false}, 2);
-	test({input:"3",timed:false}, 3);
+	test({input:"0"}, 0);
+	test({input:"1"}, 1);
+	test({input:"2"}, 2);
+	test({input:"3"}, 3);
+	test({input:"2", timed:false}, 2);
+	test({input:"3", timed:false}, 3);
 	return "Test completed!";
 };
 
@@ -156,7 +154,10 @@ var EventTypes = {
 
 	EVENT_VIEWPORT_ADDED: "2",
 	EVENT_VIEWPORT_REMOVED: "3",
+	EVENT_VIEWPORT_CHANGED: "dfs322rfw",
 
+	EVENT_TIMELINE_ADDED: "asdsadass",
+	EVENT_TIMELINE_REMOVED: "assadasdsadass",
 	EVENT_TIMELINE_CHANGED: "dfs",
 
 	EVENT_SEGUE_ADDED: "4",

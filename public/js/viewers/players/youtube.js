@@ -32,11 +32,12 @@ var YouTubeHelpers = function(){
 
 var YouTubePlayer = function (resource) {
 	var _this = this;
-	var _ready = {"meta": false,"player":false};
+	var _ready = {"meta": false, "player":false};
+	var _playing = false;
 	var _duration = 0;
+	var _lastClickPlay = false;
+	var _ratio = 1.777;
 	var _player;
-	var _ratio;
-	var _status = StatusTypes.LOADING;
 
 	// Returns the players readyness
 	this.isReady = function(){
@@ -44,8 +45,8 @@ var YouTubePlayer = function (resource) {
 	};
 
 	// Returns the players current status
-	this.getStatus = function(){
-		return _status;
+	this.isPlaying = function(){
+		return _playing;
 	};
 
 	// Returns true if the resource is using timestamps
@@ -55,6 +56,7 @@ var YouTubePlayer = function (resource) {
 
 	// Returns the position, could be slide number or timestamp.
 	this.getPosition = function(){
+		if(typeof _player == "undefined") return 0;
 		return _player.getCurrentTime();
 	};
 
@@ -70,9 +72,7 @@ var YouTubePlayer = function (resource) {
 
 	// Sets the size of the player based on the height
 	this.setSize = function(height){
-		if(!_this.isReady()){
-			return;
-		}
+		if(!_this.isReady()) return;
 		var frame= _player.a;
 		frame.height = height;
 		frame.width = height * _this.getRatio();
@@ -82,11 +82,15 @@ var YouTubePlayer = function (resource) {
 
 	// Starts the playback
 	this.play = function(){
+		if(typeof _player == "undefined") return;
+		_lastClickPlay = true;
 		_player.playVideo();
 	};
 
 	// Pauses the playback
 	this.pause = function(){
+		if(typeof _player == "undefined") return;
+		_lastClickPlay = false;
 		if (typeof _player.pauseVideo == "function") {
 			_player.pauseVideo();
 		};
@@ -94,16 +98,17 @@ var YouTubePlayer = function (resource) {
 
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
-		if(_status != this.ERROR) _player.seekTo(position);
-		// TODO Do as the target status says?? Maybe..
+		if(typeof _player == "undefined") return;
+		_player.seekTo(position, true);
 	};
 
-	var _updateStatus = function(status){
-		if(_status != status){
-			_status = status;
+	var _updatePlaying = function(playing){
+		if(_playing != playing){
+			_playing = playing;
 			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_PLAYER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
 		}
 	};
+	
 	var _updateReady = function(src, status){
 		var readyBefore = _this.isReady();
 		_ready[src] = status;
@@ -127,6 +132,8 @@ var YouTubePlayer = function (resource) {
 		var playerElement = document.createElement('div');
 		_this.htmlElement.appendChild(playerElement);
 
+		var _abortPlayback = true;
+
 		_player = new YT.Player(playerElement, {
 			height: '360',
 			width: '640',
@@ -142,30 +149,40 @@ var YouTubePlayer = function (resource) {
 			},
 			events: {
 				'onReady': function(){
-					_updateReady("player", true);
-					_updateStatus(StatusTypes.PAUSED); // Ready and paused
+					_player.seekTo(0, true);
 				},
 				'onStateChange': function(s){
-					var c = s.data;
-					// -1 (unstarted), 3 (buffering)
-					if(c == -1 || c == 3){
-						_updateReady("player", false);
-						_updateStatus(StatusTypes.LOADING); // Not ready and paused
+					if(_abortPlayback && s.data == 1){ // Successfull playback. But only on init.
+						_player.pauseVideo();
+						_abortPlayback = false;
+						return;
 					}
-					// 0 (ended), 2 (paused), 5 (cued)
-					else if(c === 0 || c == 2 || c == 5){
+
+					// Send event upstream and set variables
+					// NOT READY/NOT PLAYING:    -1 (unstarted), 3 (buffering)
+					if(s.data == -1 || s.data == 3){
+						_updateReady("player", false);
+						_updatePlaying(false);
+					}
+					// READY/NOT PLAYING:  0 (ended), 2 (paused), ??? Not relevant 5 (cued)
+					else if(s.data == 0 || s.data == 2 || s.data == 5){
+						// If supposed to play.. eg. pause is not called as the last instruction.. Just start the party again :D
+						if (_lastClickPlay) {
+							_player.playVideo();
+							return;
+						};
 						_updateReady("player", true);
-						_updateStatus(StatusTypes.PAUSED); // Ready and paused
-					}				
-					// 1 (playing)
-					else if(c == 1) {
-						_updateReady("player", true);
-						_updateStatus(StatusTypes.PLAYING); // Ready and playing
+						_updatePlaying(false);
+					}
+					// READY/PLAYING: 1 (playing)
+					else if(s.data == 1){
+						_updateReady("meta", true);
+						_updatePlaying(true);
 					}
 				},
 				'onError': function(e){
 					_updateReady("player", false);
-					_updateStatus(StatusTypes.ERROR); // Not ready and paused
+					_updatePlaying(false);
 					//  This event fires if an error occurs in the player. The value that the API passes to the event listener function will be an integer that identifies the type of error that occurred. Possible values are:
 					//  2 – The request contains an invalid parameter value. For example, this error occurs if you specify a video ID that does not have 11 characters, or if the video ID contains invalid characters, such as exclamation points or asterisks.
 					//  100 – The video requested was not found. This error occurs when a video has been removed (for any reason) or has been marked as private.
