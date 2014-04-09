@@ -19,12 +19,31 @@ var Viewport = function (viewportObject) {
 
 	var _timer;
 	var _timerNext;
+	var _maxTimelineLength = 0;
+
+	this.getLength = function() {
+		// Adding content to the timeline
+		var segue = _this.segues[_this.segues.length-1];
+		if (typeof segue == "undefined") return 0;
+		var length = segue.getLength();
+		length = length >= 0 ? length : 20;
+
+		return length + segue.offset;
+	}
 
 	/*
 	 * Adds a segue to the viewport
 	 */
 	this.addSegue = function(segue){
 		viewportObject.segues.push(segue);
+		// Order the segues by their offset.
+		viewportObject.segues.sort(function(a,b){
+			return a.offset-b.offset
+		});
+
+		_checkForNewSources();
+		_showOnlyCurrentPlayer();
+
 		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_ADDED, {detail: segue, bubbles:true, cancelable:true}));
 	};
 
@@ -33,6 +52,7 @@ var Viewport = function (viewportObject) {
 	 */
 	this.getCurrentRatio = function(){
 		// Depends on the current player
+		if(typeof _currentPlayer == "undefined") return 0;
 		var ret = _currentPlayer.getRatio();
 		if(typeof ret == "number" && 0 <= ret) return ret;
 		return 0;
@@ -75,6 +95,7 @@ var Viewport = function (viewportObject) {
 			if(segue.offset <= position || typeof cont == "undefined") return segue;
 			return cont;
 		}, undefined);
+		if (typeof currentSegue == "undefined") return;
 
 		var currentSeguePos = _this.segues.indexOf(currentSegue);
 		if (0 <= currentSeguePos || currentSeguePos < _this.segues.length - 1) {
@@ -97,7 +118,7 @@ var Viewport = function (viewportObject) {
 			if(_currentPlayer !== _players[playerPos]){
 				_currentPlayer = _players[playerPos];
 				// if changed fire event about that, let the parent resize and arrange
-				_showOnlyCurrentViewport();
+				_showOnlyCurrentPlayer();
 				_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_VIEWPORT_PLAYER_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
 			}
 
@@ -150,7 +171,18 @@ var Viewport = function (viewportObject) {
 		}
 	};
 
-	var _showOnlyCurrentViewport = function(){
+	var _checkForNewSources = function(){
+		viewportObject.segues.reduce(function(cont, segue){
+			_setupSource(segue.source);
+			return cont;
+		}, undefined);
+
+		if(_players.length == 1){
+			_currentPlayer = _players[0];
+		}
+	};
+
+	var _showOnlyCurrentPlayer = function(){
 		// hide unneeded players
 		_players.forEach(function(player){
 			player.htmlElement.style.display = _currentPlayer === player ? 'block' : 'none';
@@ -183,12 +215,9 @@ var Viewport = function (viewportObject) {
 		});
 
 		// Set up the players needed
-		viewportObject.segues.reduce(function(cont, segue){
-			_setupSource(segue.source);
-			return cont;
-		}, undefined);
+		_checkForNewSources();
 		_currentPlayer = _players[0];
-		_showOnlyCurrentViewport();
+		_showOnlyCurrentPlayer();
 		_playersInitiated = true;
 		_checkReadyness();
 	})();

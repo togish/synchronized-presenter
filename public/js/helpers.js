@@ -155,6 +155,9 @@ var EventTypes = {
 	EVENT_VIEWPORT_ADDED: "2",
 	EVENT_VIEWPORT_REMOVED: "3",
 	EVENT_VIEWPORT_CHANGED: "dfs322rfw",
+	EVENT_VIEWPORT_STATUS_CHANGED: "sdasdadawsqwesds",
+	EVENT_VIEWPORT_READYNESS_CHANGED: "sdpofkisoidjfsds",
+	EVENT_VIEWPORT_PLAYER_CHANGED: "uhdiuhsdfiuhdshbyuffguydsiygfgudtrfy",
 
 	EVENT_TIMELINE_ADDED: "asdsadass",
 	EVENT_TIMELINE_REMOVED: "assadasdsadass",
@@ -166,15 +169,12 @@ var EventTypes = {
 	EVENT_SEGUE_BLURED: "fkdo",
 	EVENT_SEGUE_FOCUED: "jdjdosow",
 
-	EVENT_PRESENTER_STATUS: "statusChanged",
-	EVENT_PRESENTER_DURATION: "durationChanged",
+	EVENT_PRESENTER_STATUS_CHANGED: "statusChanged",
+	EVENT_PRESENTER_READYNESS_CHANGED: "ssasdasdtatusChanged",
+	EVENT_PRESENTER_DURATION_CHANGED: "durationChanged",
 
 	EVENT_PLAYER_STATUS_CHANGED: "sdasdadawsqwe",
-	EVENT_PLAYER_READYNESS_CHANGED: "sdpofkisoidjf",
-	
-	EVENT_VIEWPORT_STATUS_CHANGED: "sdasdadawsqwesds",
-	EVENT_VIEWPORT_READYNESS_CHANGED: "sdpofkisoidjfsds",
-	EVENT_VIEWPORT_PLAYER_CHANGED: "uhdiuhsdfiuhdshbyuffguydsiygfgudtrfy"
+	EVENT_PLAYER_READYNESS_CHANGED: "sdpofkisoidjf"
 };
 
 var StatusTypes = {

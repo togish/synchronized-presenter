@@ -41,10 +41,12 @@ var Builder = function (containerElement) {
 			}
 	});
 	titleInput.addEventListener('blur', function(e){
-		// _this.presentation.title = titleInput.value;
+		data.presentation.title = titleInput.value;
+		titleInput.value;
 	});
-	this.addEventListener("presentation loaded", function(){
-		// titleInput.value = "TO SET :D";
+	this.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(){
+		titleInput.value = data.presentation.title;
+		document.title = titleInput.value;
 	});
 	blockHeader.appendChild(titleInput);
 	containerElement.appendChild(blockHeader);

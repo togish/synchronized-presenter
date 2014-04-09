@@ -16,14 +16,15 @@ var ControlBar = function () {
 
 	this.initUI = function(presentation){
 		_this.htmlElement = document.createElement('div');
-		var _progress = document.createElement('div');
-		var _progressBar = document.createElement('div');
-	
 		_this.htmlElement.className = 'control-bar';
-		_progress.className = 'progress';
-		_progressBar.className = 'progress-bar';
-		_progress.appendChild(_progressBar);
+
+		var _progress = document.createElement('div');
 		_this.htmlElement.appendChild(_progress);
+		_progress.className = 'progress';
+
+		var _progressBar = document.createElement('div');
+		_progress.appendChild(_progressBar);
+		_progressBar.className = 'progress-bar';
 	
 		var ease = function(e, to, time){
 			e.style["-webkit-transition"] = "width "+time+"s linear";
@@ -35,20 +36,53 @@ var ControlBar = function () {
 		_btnPlayPause.className = "play-pause";
 		_this.htmlElement.appendChild(_btnPlayPause);
 
+		var _statusPanel = document.createElement('div');
+		_statusPanel.className = 'status-panel';
+		_this.htmlElement.appendChild(_statusPanel);
+
+		var _position = document.createElement('span');
+		_statusPanel.appendChild(_position);
+		_position.className = 'position';
+
+		var _duration = document.createElement('span');
+		_statusPanel.appendChild(_duration);
+		_duration.className = 'duration';
+
+		var interval;
+		var setPosition = function(){
+			var pos = Math.round(presentation.getPosition());
+			_position.innerHTML = "" + SecondsToTime(pos);
+		};
 		var updateUI = function(e){
-			var percent = presentation.getCompletedPercent();
-			
-			_this.htmlElement.classList.remove("ready");
-			_this.htmlElement.classList.remove("playing");
-			ease(_progressBar, percent, 0);
+
 			if(presentation.isReady()){
 				_this.htmlElement.classList.add("ready");
+			} else {
+				_this.htmlElement.classList.remove("ready");
 			}
 			
 			if(presentation.isPlaying()){
+				// Mark as playing
 				_this.htmlElement.classList.add("playing");
+
+				// Start the progress bar
 				ease(_progressBar, 100, presentation.getDuration() - presentation.getPosition());
+
+				// Set interval for 
+				setPosition();
+				interval = setInterval(function(){
+					setPosition();
+				},1000);
+			} else {
+				// Stop the progress bar
+				var percent = presentation.getCompletedPercent();
+				ease(_progressBar, percent, 0);
+				_this.htmlElement.classList.remove("playing");
+				if(typeof interval != "undefined") clearInterval(interval);
 			}
+
+			setPosition();
+			_duration.innerHTML = "" + SecondsToTime(presentation.getDuration());
 		};
 
 		// presentation.addEventListener(EventTypes.EVENT_STATUS, , false);
@@ -62,9 +96,17 @@ var ControlBar = function () {
 				presentation.pause();
 			}
 		});
-	
-		presentation.addEventListener(EventTypes.EVENT_DURATION, function(e){
-			// console.log("UI EVENT_DURATION changed to: " + presentation.getDuration());
+
+
+		presentation.addEventListener(EventTypes.EVENT_PRESENTER_STATUS_CHANGED, function(e){
+			updateUI();
 		}, false);
+		presentation.addEventListener(EventTypes.EVENT_PRESENTER_READYNESS_CHANGED, function(e){
+			updateUI();
+		}, false);
+		presentation.addEventListener(EventTypes.EVENT_PRESENTER_DURATION_CHANGED, function(e){
+			updateUI();
+		}, false);
+		updateUI();
 	}
 };

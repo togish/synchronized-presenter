@@ -8,16 +8,12 @@ var Timeline = function (viewport, data) {
 	this.htmlElementName = document.createElement('div');
 	this.htmlElement = document.createElement('div');
 	this.segues = viewport.segues;
+	this.getLength = viewport.getLength;
 
 	// Private instance variables
 	var _this = this;
-	var _maxTimelineLength = 0;
 	var _scale = 5;
 	var _lastDraggedSource;
-
-	this.getLength = function() {
-		return _maxTimelineLength;
-	}
 
 	/*
 	 * Initializes the UI that is dependent on event element
@@ -62,11 +58,6 @@ var Timeline = function (viewport, data) {
 				}, _lastDraggedSource);
 				viewport.addSegue(segue);
 			}
-
-			// Order the segues by their offset.
-			viewport.segues.sort(function(a,b){
-				return a.offset-b.offset
-			});
 
 			// Dispatches event about the change
 			if(clearSegue){
@@ -117,26 +108,14 @@ var Timeline = function (viewport, data) {
 			_this.htmlElement.removeChild(_this.htmlElement.firstChild);
 		}
 
-		// Adding content to the timeline
-		var newMax = 0;
 		_this.segues.forEach(function(segue, index, arr){
 			_this.htmlElement.appendChild(segue.htmlElement);
-
 			var length = segue.getLength();
 			length = index < arr.length-1 ? arr[index+1].offset - segue.offset : length >= 0 ? length : 20;
 			segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (length * _scale) +'px';
+		});
 
-			var last = segue.offset + length;
-			if (last > newMax) {
-				newMax = last;
-			};
-		}, undefined);
-
-		// Checks if maxLength has changed
-		if(_maxTimelineLength != newMax){
-			_maxTimelineLength = newMax;
-			_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_TIMELINE_CHANGED, {detail: _this, bubbles:true}));
-		}
+		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_TIMELINE_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
 	};
 
 	// Building html. Non polluting method

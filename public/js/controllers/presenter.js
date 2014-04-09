@@ -14,6 +14,9 @@ var Presenter = function (containerElement, controlBar, data) {
 	var _position = 0;
 	// The absolute time for the last press on play
 	var _lastStart = 0;
+	// Ready variable
+	var _ready = false;
+	var _pauseTimer;
 
 
 	// Proxy methods for event subscribe, remove and dispatch
@@ -34,12 +37,14 @@ var Presenter = function (containerElement, controlBar, data) {
 	 * Returns if the presentation is ready
 	 */
 	this.isReady = function(){
-		return data.presentation.viewports.reduce(function(cont, viewport){
+		if (!(data instanceof Data) || typeof data.presentation.viewports == "undefined") return 0;
+		_ready = data.presentation.viewports.reduce(function(cont, viewport){
 			if(!viewport.isReady()){
 				return false;
 			}
 			return cont;
 		}, true);
+		return _ready;
 	};
 
 	/*
@@ -55,13 +60,17 @@ var Presenter = function (containerElement, controlBar, data) {
 	this.play = function(skip){
 		if(_playing || !_this.isReady()) return;
 
-		// TODO Fire event
-		if(!skip) _playing = true;
-
 		// Register the newest start time
 		_lastStart = new Date().getTime();
 
-		// if replay seek to start
+		if(!skip) {
+			_playing = true;
+			_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_PRESENTER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
+
+		_pauseTimer = setTimeout(function(){
+			_this.pause();
+		},(_this.getDuration() - _position)*1000);
 		
 		// Update the current position
 		data.presentation.viewports.forEach(function(viewport){
@@ -77,14 +86,18 @@ var Presenter = function (containerElement, controlBar, data) {
 		if(!_playing) return;
 		_position = this.getPosition();
 
-		// TODO Fire event
-		if(!skip) _playing = false;
+		if(!skip) {
+			_playing = false;
+			_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_PRESENTER_STATUS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+		}
 
 		// Update the current position
 		data.presentation.viewports.forEach(function(viewport){
 			// No matter what, just pause the media. Better safe than sorry.
 			viewport.pause();
 		});
+
+		if(typeof _pauseTimer != "undefined") clearTimeout(_pauseTimer);
 	};
 		
 	/*
@@ -112,6 +125,29 @@ var Presenter = function (containerElement, controlBar, data) {
 		data.presentation.viewports.forEach(function(viewport, viewportIdx){
 			viewport.setSize(height);
 		});
+	};
+
+
+	var _durationOld = 0;
+
+	/*
+	 * Returns the over all duration of the presentation, in seconds.
+	 */
+	this.getDuration = function(){
+		if (!(data instanceof Data) || typeof data.presentation.viewports == "undefined") return 0;
+		return data.presentation.viewports.reduce(function(cont, viewports){
+			var len = viewports.getLength();
+			return cont < len ? len : cont;
+		}, 0);
+	};
+
+	/*
+	 * Returns percent describing how long into the presentation we are.
+	 */
+	this.getCompletedPercent = function(){
+		// Avoid division by zero
+		if(this.getDuration() === 0) return 0;
+		return (this.getPosition()/this.getDuration())*100;
 	};
 
 	(function(){
@@ -143,7 +179,11 @@ var Presenter = function (containerElement, controlBar, data) {
 
 		// EVENT_VIEWPORT_READYNESS_CHANGED
 		_this.addEventListener(EventTypes.EVENT_VIEWPORT_READYNESS_CHANGED, function(ev){
-			if(_this.isReady()){
+			if(_ready != _this.isReady()){
+				_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_PRESENTER_READYNESS_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+			}
+			if(_ready){
+				updateDuration();
 				_updateRatio();
 				if(_playing){
 					// If becomming ready again, 
@@ -155,6 +195,15 @@ var Presenter = function (containerElement, controlBar, data) {
 			}
 		}, false);
 
+		var updateDuration = function(){
+			// Has dat length changed?? :D
+			var newDur = _this.getDuration();
+			if(_durationOld != newDur){
+				_durationOld = newDur;
+				_this.dispatchEvent(new CustomEvent(EventTypes.EVENT_PRESENTER_DURATION_CHANGED, {detail: _this, bubbles:true, cancelable:true}));
+			}
+		};
+
 		var fillContainer = function(){
 			// Empty the presenter
 			while(_viewportContainer.firstChild){
@@ -165,11 +214,14 @@ var Presenter = function (containerElement, controlBar, data) {
 			data.presentation.viewports.forEach(function(viewport, viewportIdx){
 				_viewportContainer.appendChild(viewport.htmlElement);
 			});
+			_updateRatio();
 		};
 
 		_this.addEventListener(EventTypes.EVENT_PRESENTATION_LOADED, function(ev){
 			data = ev.detail;
 			fillContainer();
+			updateDuration();
+			document.title = data.presentation.title;
 		});
 
 		_this.addEventListener(EventTypes.EVENT_VIEWPORT_ADDED, function(ev){
@@ -180,82 +232,31 @@ var Presenter = function (containerElement, controlBar, data) {
 		});
 
 
-		_this.addEventListener(EventTypes.EVENT_SEGUE_ADDED, function(ev){
+		var updateViewports = function(){
+			if(_this.isPlaying()){
+				_this.pause();
+				_this.play();
+			} else {
+				_this.play();
+				_this.pause();
+			}
+			updateDuration();
+			_updateRatio();
+		};
 
+		// Do the play pause trick when changes occour
+		_this.addEventListener(EventTypes.EVENT_SEGUE_ADDED, function(ev){
+			updateViewports();
 		});
 		_this.addEventListener(EventTypes.EVENT_SEGUE_REMOVED, function(ev){
+			updateViewports();
 		});
 		_this.addEventListener(EventTypes.EVENT_SEGUE_CHANGED, function(ev){
+			updateViewports();
 		});
-
-		// Handle when a timeline is added or removed
-			// Invoke the same method as when a presentation is loaded, except for the update data reference
-		// Handle when a segue is added or changed
-			// Play pause trick
 
 		if(!_hasExternalData){
 			data.loadAuto();
 		}
 	})();
-
-
-
-//	var _duration = 0;
-//
-//	/*
-//	 * Returns the over all duration of the presentation, in seconds.
-//	 */
-//	this.getDuration = function(){
-//		return _duration;
-//	};
-//
-//	/*
-//	 * Returns percent describing how long into the presentation we are.
-//	 */
-//	this.getCompletedPercent = function(){
-//		// Avoid division by zero
-//		if(this.getDuration() === 0) return 0;
-//		return (this.getPosition()/this.getDuration())*100;
-//	};
-//
-//	/*
-//	 *
-//	 */
-//	var updateDuration = function() {
-//		// Run through all of the 
-//		var bef = _duration;
-//		_duration = 500;
-//
-//
-//		// Take the last segue in each of the viewports
-//		// Calculate the latest point bases
-//		
-//		/*
-//		data.presentation.sources.forEach(function(resource){
-//			var handler = resource.handler;
-//			// Skips if no duration avaliable
-//			if(handler.getStatus() != handler.READY && handler.getStatus() != handler.PLAYING) return;
-//			
-//			// Checks for negative duration. This means no internal timing.
-//			var resourceDuration = handler.getDuration();
-//			if(resourceDuration < 0) return;
-//
-//			// event from resource withthe largest offset.
-//			// var latestEvent = resource.events.reduce(function(previous,current){
-//				// if(previous.offset < current.offset) return current;
-//				// return previous;
-//			// },{offset:-1});
-//
-//			// Checks if a last event was found.
-//			// TODO Figure out if this will ever happen, if events has elements.
-//			if(latestEvent.offset < 0) return;
-//
-//			var latestPoint = latestEvent.offset - latestEvent.position + resourceDuration;
-//			if (_duration < latestPoint) {
-//				_duration = latestPoint;
-//			}
-//		});
-//		if(bef != _duration) containerElement.dispatchEvent(new CustomEvent(_this.EVENT_DURATION, {bubbles:true,cancelable:true}));
-//		*/
-//	};
 };

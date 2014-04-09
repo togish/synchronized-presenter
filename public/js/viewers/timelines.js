@@ -5,13 +5,19 @@
 /* global Event: false */
 /* global console: false */
 var Timelines = function (containerElement) {
-
 	this.htmlElement = document.createElement('div');
 
 	var _data;
 	var _this = this;
 	var _timelineList;
 	var _timelineContainer;
+
+	this.getLength = function(){
+		return _data.presentation.timelines.reduce(function(cont, timeline){
+			var len = timeline.getLength();
+			return cont < len ? len : cont;
+		}, 0);
+	};
 
 	this.addViewport = function(){
 		if(!(_data instanceof Data)){
@@ -59,10 +65,7 @@ var Timelines = function (containerElement) {
 		});
 	
 		_timelineContainer.addEventListener(EventTypes.EVENT_TIMELINE_CHANGED, function(ev){
-			var maxLen = _data.presentation.timelines.reduce(function(cont, timeline){
-				var len = timeline.getLength();
-				return cont < len ? len : cont;
-			}, 0);
+			var maxLen = _this.getLength();
 			_data.presentation.timelines.forEach(function(timeline){
 				if(timeline.htmlElement instanceof HTMLElement){
 					timeline.htmlElement.style.width = '' + (maxLen + 50) * 5 + 'px';

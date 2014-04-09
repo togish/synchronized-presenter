@@ -47,9 +47,9 @@ var PdfJsPlayer = function(resource){
 
 	// Sets the size of the player based on the height
 	this.setSize = function(height){
+		_targetHeight = height;
 		_this.htmlElement.style.height = height;
 		_this.htmlElement.style.width = height * _ratio;
-		_targetHeight = height;
 		_renderPage();
 	};
 	window.ses = this.setSize;
@@ -90,6 +90,7 @@ var PdfJsPlayer = function(resource){
 
 
 	var _renderPage = function(){
+		if(typeof _page == "undefined") return;
 		// Initial load of viewport
 		var viewport = _page.getViewport(1);
 		// Ajusted viewport
