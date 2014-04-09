@@ -222,7 +222,10 @@ var Viewport = function (viewportObject) {
 
 		// Set up the players needed
 		_checkForNewSources();
-		_currentPlayer = _players[0];
+		var fSegue = _this.segues[0];
+		if(typeof fSegue != "undefined" && fSegue.offset == 0){
+			_currentPlayer = _players[_sources.indexOf(fSegue.source)];
+		}
 		_showOnlyCurrentPlayer();
 		_playersInitiated = true;
 		_checkReadyness();

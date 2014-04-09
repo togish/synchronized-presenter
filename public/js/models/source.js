@@ -36,7 +36,7 @@ var Source = function (source, data) {
 	draggable.innerHTML = '+';
 	draggable.addEventListener('dragstart', function(e){
 		e.dataTransfer.dropEffect = 'copy';
-		e.dataTransfer.setData("text/plain", "source");
+		e.dataTransfer.setData("text/plain", _this.type == "clear"? "clear":"source");
 		_this.htmlElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SOURCE_DRAGGED, {detail: _this, bubbles:true}));
 	});
 	draggable.addEventListener('dragend', function(e){

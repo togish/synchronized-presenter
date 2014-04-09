@@ -62,7 +62,7 @@ var Segue = function (segue, source, data) {
 
 		// Checks if possible to perform the change
 		var ret = false;
-		if(typeof newValue == "number" && 0 <= newValue && newValue < source.length){
+		if(typeof newValue == "number" && ((source.timed && 0 <= newValue && newValue < source.length) || (!source.timed && 0 < newValue && newValue <= source.length))){
 			_this.value = newValue;
 			ret = true;
 		}
