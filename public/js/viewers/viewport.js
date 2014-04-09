@@ -111,6 +111,11 @@ var Viewport = function (viewportObject) {
 			timeout = 0;
 		}
 		_timer = setTimeout(function(){
+			if(typeof currentSegue.source == "undefined"){
+				_currentPlayer = undefined;
+				_showOnlyCurrentPlayer();
+				return;
+			}
 			var playerPos = _sources.indexOf(currentSegue.source);
 
 			// Fail securing
@@ -154,6 +159,7 @@ var Viewport = function (viewportObject) {
 	};
 
 	var _setupSource = function(source){
+		if(typeof source == "undefined") return;
 		if(_sources.indexOf(source) == -1){
 			var pos = _sources.push(source) - 1;
 			if(source.type == "slideshare"){

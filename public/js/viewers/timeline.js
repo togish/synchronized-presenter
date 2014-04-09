@@ -93,6 +93,7 @@ var Timeline = function (viewport, data) {
 		_this.htmlElement.remove();
 		_this.htmlElementName.remove();
 		viewport.htmlElement.remove();
+		
 		// Tells the data class about it
 		if(data instanceof Data){
 			data.removeViewport(_this);
@@ -111,6 +112,7 @@ var Timeline = function (viewport, data) {
 
 		_this.segues.forEach(function(segue, index, arr){
 			_this.htmlElement.appendChild(segue.htmlElement);
+			segue.htmlElement.style.marginLeft = ((index == 0 && segue.offset > 0) ? segue.offset : 0) * _scale + 'px';
 			var length = segue.getLength();
 			length = index < arr.length-1 ? arr[index+1].offset - segue.offset : length >= 0 ? length : 20;
 			segue.htmlElement.style.minWidth = segue.htmlElement.style.width = ''+ (length * _scale) +'px';

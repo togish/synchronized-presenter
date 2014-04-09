@@ -213,7 +213,7 @@ var Segue = function (segue, source, data) {
 		_segueOffset = addBlock("offset", _this.ajustOffsetRelative, _this.ajustOffset);
 
 		// If a segue with a value. Then add input for that.
-		if(_this.action != "clear"){
+		if(_this.action != "clear" && typeof source != "undefined"){
 			// Sets the color of the segue according to the source color
 			_this.htmlElement.style.backgroundColor = _this.source.color;
 			_segueValue = addBlock("value", _this.ajustValueRelative, _this.ajustValue);
