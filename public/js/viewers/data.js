@@ -26,10 +26,10 @@ var Data = function (eventElement) {
 	}
 
 	// Basepath for generating links
-	this.presenterBasePath = "http://bachelor.dev/";
+	this.presenterBasePath = 'http://'+document.domain+'/';
 
 	// List of colors that is good for the presentations appearance
-	this.colors = ["hsl(32,100%,50%)", "hsl(195,100%,40%)", "hsl( 80,100%,30%)"];
+	this.colors = ["hsl(195,100%,40%)", "hsl( 80,100%,30%)", "hsl(32,100%,50%)"];
 
 	// The presentation
 	this.presentation = {};
@@ -431,7 +431,7 @@ var Data = function (eventElement) {
 			_this.fromB64zip(UrlParams.b64zip);
 		} else if(typeof UrlParams.url == "string"){
 			_this.fromUrl(UrlParams.url);
-		} else if(defaultToNew){
+		} else if(typeof UrlParams.build == "string" || defaultToNew){
 			_this.newPresentation();
 		} else {
 			_this.notFoundDialog();
@@ -563,7 +563,7 @@ var Data = function (eventElement) {
 	if(eventElement instanceof HTMLElement){
 		var element = document.createElement("div");
 		element.className = "block-data";
-		element.innerHTML = '<button class="create">New presentation</button><button class="load">Open & save</button><button class="link">Show directly</button>';
+		element.innerHTML = '<button class="create">New</button><button class="load">Open & save</button><button class="link">Show directly</button>';
 
 		var classList = {
 			load: _this.loadSaveDialog,

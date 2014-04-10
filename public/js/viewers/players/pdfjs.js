@@ -93,8 +93,12 @@ var PdfJsPlayer = function(resource){
 		if(typeof _page == "undefined") return;
 		// Initial load of viewport
 		var viewport = _page.getViewport(1);
+		// Run through all and find most frequent
+		_ratio = viewport.width/viewport.height;
+
 		// Ajusted viewport
 		viewport = _page.getViewport(_targetHeight/viewport.height);
+
 		_canvas.height = _targetHeight;
 		_canvas.width = _targetHeight * _ratio;
 		_page.render({
@@ -113,8 +117,6 @@ var PdfJsPlayer = function(resource){
 			_numOfPages = pdf.numPages;
 			_this.seek(1);
 			_updateReady(true);
-			// Run through all and find most frequent
-			// _ratio = viewport.width/viewport.height;
 		});
 	})();
 };
