@@ -201,7 +201,7 @@ var Data = function (eventElement) {
 	/*
 	 * Presents a save presentation dialog
 	 */
-	this.saveDialog = function(){
+	this.loadSaveDialog = function(notFoundMode){
 		var presentation = _cleanPresentation();
 		var filename = _this.presentation.title + ".json";
 
@@ -209,43 +209,23 @@ var Data = function (eventElement) {
 		var sinks = [];
 
 		// Building buttons for save actions
-		var btnFile = document.createElement("button");
-		btnFile.innerHTML = "Save to file";
-		btnFile.addEventListener('click', function(e){
+		var fileOption = {text:'Disk'};
+		fileOption.save = document.createElement("button");
+		fileOption.save.innerHTML = "Save to disk";
+		fileOption.save.addEventListener('click', function(e){
 			e.preventDefault();
 			var blob = new Blob([presentation], {type: "text/json;charset=utf-8"});
 			saveAs(blob, filename);
 		});
-		sinks.push({
-			text: "File:",
-			button: btnFile
-		});
-
-		// Building save to dropbox shit
-		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
-			var btnDropbox = Dropbox.createSaveButton("data:text/json;base64," + btoa(presentation), filename);
-			sinks.push({
-				text: "Dropbox:",
-				button: btnDropbox
-			});
-		}
-
-		// Shows the dialog
-		_createDialog('Save presentation', sinks);
-	};
-
-	/*
-	 * Presents a load presentation dialog
-	 */
-	this.loadDialog = function(){
-		// Holds the sources
-		var sinks = [];
 
 		// Building buttons for read actions
-		var btnFile = document.createElement("input");
-		btnFile.type = 'file';
-		btnFile.name = 'file';
-		btnFile.addEventListener('change', function(e){
+		fileOption.load = document.createElement("div");
+		fileOption.load.className = "file-upload";
+		fileOption.load.innerHTML = "<button>Load from disk</button>";
+		var fileInput = document.createElement("input");
+		fileOption.load.appendChild(fileInput);
+		fileInput.type = 'file';
+		fileInput.addEventListener('change', function(e){
 			var file = e.target.files[0];
 			var reader = new FileReader();
 			reader.onload = function(e) {
@@ -253,14 +233,14 @@ var Data = function (eventElement) {
 			};
 			reader.readAsText(file);
 		}, false);
-		sinks.push({
-			text: "File:",
-			button: btnFile 
-		});
+		sinks.push(fileOption);
 
-		// Building dropbox ui
+		// Building save to dropbox
 		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
-			var btnDropbox = Dropbox.createChooseButton({
+			var dropOption = {text:'DropBox'};
+			dropOption.save = Dropbox.createSaveButton("data:text/json;base64," + btoa(presentation), filename);
+
+			dropOption.load = Dropbox.createChooseButton({
 				success: function(files) {
 					_this.load(files[0].link);
 				},
@@ -268,27 +248,193 @@ var Data = function (eventElement) {
 				multiselect: false,
 				// extensions: ['.pdf', '.doc', '.docx'],
 			});
-			sinks.push({
-				text: "Dropbox:",
-				button: btnDropbox
-			});
+			sinks.push(dropOption);
 		}
 
 		// Shows the dialog
-		_createDialog('Load presentation', sinks);
+		// Builds the fade for the background
+		var fade = document.createElement('div');
+		fade.className = "fade";
+		fade.addEventListener('click', function(e){
+			if(e.target == fade){
+				e.preventDefault();
+				_disposeFade();
+			}
+		});
+		_disposeFade = function(){fade.remove();};
+
+		// Builds the dialog
+		var dialog = document.createElement('div');
+		fade.appendChild(dialog);
+
+		dialog.className = "dialog";
+		dialog.innerHTML = '<h1>Save and load presentation</h1>';
+
+		// Generating destination table. Adding the sinks to the UI
+		var table = document.createElement("table");
+		table.innerHTML = "<tr><th>&nbsp;</th><th>Save to:</th><th>Load from:</th></tr>";
+
+		sinks.forEach(function(element){
+			var row = document.createElement("tr");
+			row.innerHTML = "<td><h3>" + element.text + "</td></h3>";
+
+			var cellSave = document.createElement("td");
+			cellSave.appendChild(element.save);
+			row.appendChild(cellSave);
+
+			var cellLoad = document.createElement("td");
+			cellLoad.appendChild(element.load);
+			row.appendChild(cellLoad);
+
+			table.appendChild(row);
+		});
+		dialog.appendChild(table);
+
+		// Information about the useage
+		var infoTitle = document.createElement('h3');
+		infoTitle.className = "paste-link";
+		infoTitle.innerHTML = 'Upload your presentation file and</br>paste link to the file here!';
+		dialog.appendChild(infoTitle);
+		
+		var pasteLink = document.createElement('input');
+		pasteLink.className = "paste-link";
+		pasteLink.addEventListener("keyup", function(e){
+			if(e.keyCode == 13){
+				e.preventDefault();
+				window.open(_this.presenterBasePath + '?url=' + pasteLink.value);
+			}
+		});
+		dialog.appendChild(pasteLink);
+
+
+
+		// Building the done button
+		var done = document.createElement('button');
+		done.innerHTML = "Close";
+		done.className = "done";
+		done.addEventListener('click', function(){
+			_disposeFade();
+		});
+		dialog.appendChild(done);
+
+		// Adds the fade to the body
+		document.body.appendChild(fade);
+
+		// Returns the dialog
+		return dialog;
 	};
+
+	/*
+	 * Presents a save presentation dialog
+	 */
+	this.notFoundDialog = function(){
+		// Holds the save destinations
+		var sinks = [];
+
+		// Building buttons for read actions
+		var fileOption = {text: "Disk"};
+		fileOption.load = document.createElement("div");
+		fileOption.load.className = "file-upload";
+		fileOption.load.innerHTML = "<button>Load from disk</button>";
+		var fileInput = document.createElement("input");
+		fileOption.load.appendChild(fileInput);
+		fileInput.type = 'file';
+		fileInput.addEventListener('change', function(e){
+			console.debug("never got here");
+			var file = e.target.files[0];
+			var reader = new FileReader();
+			reader.onload = function(e) {
+				_buildPresentation(e.target.result);
+			};
+			reader.readAsText(file);
+		}, false);
+		sinks.push(fileOption);
+
+		// Building save to dropbox
+		if(typeof Dropbox != "undefined" && Dropbox.isBrowserSupported()){
+			var dropOption = {text:'DropBox'};
+
+			dropOption.load = Dropbox.createChooseButton({
+				success: function(files) {
+					_this.load(files[0].link);
+				},
+				linkType: "direct",
+				multiselect: false,
+				// extensions: ['.pdf', '.doc', '.docx'],
+			});
+			sinks.push(dropOption);
+		}
+
+		// Shows the dialog
+		// Builds the fade for the background
+		var fade = document.createElement('div');
+		fade.className = "fade";
+
+		// Builds the dialog
+		var dialog = document.createElement('div');
+		fade.appendChild(dialog);
+
+		dialog.className = "dialog";
+		dialog.innerHTML = '<h1>Load presentation</h1>';
+
+		// Information about the useage
+		var infoTitle = document.createElement('h3');
+		infoTitle.className = "paste-link";
+		infoTitle.innerText = 'Paste link to presentation and pres enter!';
+		dialog.appendChild(infoTitle);
+		
+		var pasteLink = document.createElement('input');
+		pasteLink.className = "paste-link";
+		pasteLink.addEventListener("keyup", function(e){
+			if(e.keyCode == 13){
+				e.preventDefault();
+				window.location = _this.presenterBasePath + '?url=' + pasteLink.value;
+			}
+		});
+		dialog.appendChild(pasteLink);
+
+		var separator = document.createElement('h3');
+		separator.innerHTML = "Or load a file";
+		separator.className = "or";
+		dialog.appendChild(separator);
+
+
+		// Generating destination table. Adding the sinks to the UI
+		var table = document.createElement("table");
+		sinks.forEach(function(element){
+			var row = document.createElement("tr");
+			row.innerHTML = "<td><h3>" + element.text + "</td></h3>";
+
+			var cellLoad = document.createElement("td");
+			cellLoad.appendChild(element.load);
+			row.appendChild(cellLoad);
+
+			table.appendChild(row);
+		});
+		dialog.appendChild(table);
+
+
+		// Adds the fade to the body
+		document.body.appendChild(fade);
+
+		// Returns the dialog
+		return dialog;
+	};
+
 
 	/*
 	 * Tries to load the presentation, else a new is generated
 	 */
-	this.loadAuto = function(){
+	this.loadAuto = function(defaultToNew){
 		// Loads presentation if possible
 		if(typeof UrlParams.b64zip == "string"){
 			_this.fromB64zip(UrlParams.b64zip);
 		} else if(typeof UrlParams.url == "string"){
 			_this.fromUrl(UrlParams.url);
-		} else {
+		} else if(defaultToNew){
 			_this.newPresentation();
+		} else {
+			_this.notFoundDialog();
 		}
 	};
 
@@ -303,58 +449,6 @@ var Data = function (eventElement) {
 	// Function called when a fade needs to be disposed
 	var _disposeFade = function(){};
 
-	/*
-	 * Builds a dialog with the specified title
-	 */
-	var _createDialog = function(title, sinks){
-		// Builds the fade for the background
-		var fade = document.createElement('div');
-		fade.className = "fade";
-		fade.addEventListener('click', function(e){
-			e.preventDefault();
-			if(e.target == fade){
-				_disposeFade();
-			}
-		});
-		_disposeFade = function(){fade.remove();};
-
-		// Builds the dialog
-		var dialog = document.createElement('div');
-		dialog.className = "dialog";
-		dialog.innerHTML = '<h1>'+title+'</h1>';
-
-
-		// Generating destination table. Adding the sinks to the UI
-		var table = document.createElement("table");
-		sinks.forEach(function(element){
-			var row = document.createElement("tr");
-			row.innerHTML = "<td><h3>" + element.text + "</td></h3>";
-
-			var cell = document.createElement("td");
-			cell.appendChild(element.button);
-			
-			row.appendChild(cell);
-			table.appendChild(row);
-		});
-		dialog.appendChild(table);
-
-		// Building the done button
-		var done = document.createElement('button');
-		done.innerHTML = "DONE";
-		done.className = "done";
-		done.addEventListener('click', function(){
-			_disposeFade();
-		});
-		dialog.appendChild(done);
-
-		// Adds the fade to the body
-		fade.appendChild(dialog);
-		document.body.appendChild(fade);
-
-		// Returns the dialog
-		return dialog;
-	};
-	
 	/*
 	 * Builds the presentation object from a text string
 	 * Loads the presentation into the loadTarget
@@ -469,11 +563,10 @@ var Data = function (eventElement) {
 	if(eventElement instanceof HTMLElement){
 		var element = document.createElement("div");
 		element.className = "block-data";
-		element.innerHTML = '<button class="create">New</button><button class="save">Save</button><button class="load">Load</button><button class="link">Show</button>';
+		element.innerHTML = '<button class="create">New presentation</button><button class="load">Open & save</button><button class="link">Show directly</button>';
 
 		var classList = {
-			save: _this.saveDialog,
-			load: _this.loadDialog,
+			load: _this.loadSaveDialog,
 			link: _this.linkOpen,
 			create: _this.create
 		};

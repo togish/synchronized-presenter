@@ -90,7 +90,7 @@
 
 
 	.block-data button{
-		width:25%;
+		width:33.33%;
 	}
 
 
@@ -262,22 +262,68 @@
 	}
 
 	.dialog{
-		position: absolute;
-		min-width: 100px;
-		min-height: 100px; 
+		position:fixed;
+		left:50%;
+		top:0%;
+		width:550px;
+		margin-left:-310px;
 		background: black;
-		left: 25%;
-		top: 25%;
-		padding:50px;
+		border:2px solid #000;
+		z-index:100000;
+		padding:35px;
+	}
+	.dialog h1{
+		text-align: center;
+	}
+	.dialog h3.what-now{
+		line-height: 20px;
+		margin-top: 30px;
+	}
+	.dialog h3.paste-link{
+		line-height: 20px;
+		margin-top: 30px;
+		text-align: center;
+	}
+	.dialog input.paste-link{
+		width: 100%;
+		font-size: 22px;
+	}
+	.dialog h3.or{
+		line-height: 20px;
+		margin-top: 40px;
+		margin-bottom: 10px;
+		text-align: center;
+	}
+	.dialog p{
+		margin-top: 0;
 	}
 
 	.dialog table{
 		width: 100%;
-
+	}
+	.dialog tr td:not(:first-child), .dialog tr th:not(:first-child){
+		text-align: center; 
 	}
 
-	.dialog button, .dialog a{
+	.dialog button.done{
 		float:right;
+	}
+
+	.file-upload {
+		position: relative;
+		overflow: hidden;
+		display: inline-block;
+	}
+	.file-upload input[type=file] {
+		position: absolute;
+		top: 0;
+		right: 0;
+		margin: 0;
+		padding: 0;
+		font-size: 20px;
+		cursor: pointer;
+		opacity: 0;
+		filter: alpha(opacity=0);
 	}
 
 
