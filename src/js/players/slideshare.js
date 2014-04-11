@@ -80,7 +80,6 @@ var SlideSharePlayer = function(resource){
 	(function(){
 		_this.htmlElement = document.createElement('div');
 		_this.htmlElement.className = 'player-slideshare';
-		_updateStatus(_this.LOADING);
 		_viewer = new SlideShareViewer(resource.url, _this.htmlElement, {readyCallback: function(){
 			_updateReady(true);
 			_updatePlaying(false);

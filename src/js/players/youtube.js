@@ -152,8 +152,6 @@ var YouTubePlayer = function (resource) {
 					_player.seekTo(0, true);
 				},
 				'onStateChange': function(s){
-					console.debug(_lastClickPlay);
-					console.debug(s);
 					if((_abortPlayback) && s.data == 1){ // Successfull playback. But only on init.
 						_player.pauseVideo();
 						_abortPlayback = false;

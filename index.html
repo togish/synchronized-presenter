@@ -3,43 +3,35 @@
 	<head>
 		<!-- Libraries -->
 		<script type="text/javascript" src="https://www.dropbox.com/static/api/2/dropins.js" id="dropboxjs" data-app-key="aml20xwyo8s4qep"></script>
-		<!--  Loading the youtube js api: https://developers.google.com/youtube/js_api_reference-->
 		<script type="text/javascript" src="https://www.youtube.com/iframe_api"></script>
-		<script type="text/javascript" src="/public/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
-		<script type="text/javascript" src="/public/lib/FileSaver.js"></script>
-		<script type="text/javascript" src="/public/lib/jszip.min.js"></script>	
-		<script type="text/javascript" src="/public/lib/pdfjs/pdf.js"></script>	
-		<script type="text/javascript" src="/public/lib/pdfjs/generic/web/compatibility.js"></script>	
+		<script type="text/javascript" src="/src/lib/slideshare-viewer-html/slideshare-viewer-html.js"></script>	
+		<script type="text/javascript" src="/src/lib/FileSaver.js"></script>
+		<script type="text/javascript" src="/src/lib/jszip.min.js"></script>	
+		<script type="text/javascript" src="/src/lib/pdfjs/pdf.js"></script>	
+		<script type="text/javascript" src="/src/lib/pdfjs/generic/web/compatibility.js"></script>	
 
-		
-		<script type="text/javascript" src="/public/js/helpers.js"></script>
+		<script type="text/javascript" src="/src/js/helpers.js"></script>
+		<script type="text/javascript" src="/src/js/data.js"></script>
 
-		<!-- Model classes -->
-		<script type="text/javascript" src="/public/js/models/segue.js"></script>	
-		<script type="text/javascript" src="/public/js/models/source.js"></script>	
-		
-		<!-- Player modules -->
-		<script type="text/javascript" src="/public/js/viewers/players/slideshare.js"></script>	
-		<script type="text/javascript" src="/public/js/viewers/players/youtube.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/players/pdfjs.js"></script>
+		<script type="text/javascript" src="/src/js/source.js"></script>	
+		<script type="text/javascript" src="/src/js/sources.js"></script>
 
-		<!-- Managament modules -->
-		<script type="text/javascript" src="/public/js/viewers/data.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/sources.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/timeline.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/viewport.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/timelines.js"></script>
-		<script type="text/javascript" src="/public/js/viewers/controlbar.js"></script>
+		<script type="text/javascript" src="/src/js/segue.js"></script>	
+		<script type="text/javascript" src="/src/js/players/slideshare.js"></script>	
+		<script type="text/javascript" src="/src/js/players/youtube.js"></script>
+		<script type="text/javascript" src="/src/js/players/pdfjs.js"></script>
+		<script type="text/javascript" src="/src/js/viewport.js"></script>
+		<script type="text/javascript" src="/src/js/timeline.js"></script>
+		<script type="text/javascript" src="/src/js/timelines.js"></script>
 
-		<script type="text/javascript" src="/public/js/controllers/builder.js"></script>
-		<script type="text/javascript" src="/public/js/controllers/presenter.js"></script>
+		<script type="text/javascript" src="/src/js/controlbar.js"></script>
+		<script type="text/javascript" src="/src/js/presenter.js"></script>
+		<script type="text/javascript" src="/src/js/builder.js"></script>
 
 		<script type="text/javascript">
-		function pageLoaded(){
+		function documentLoaded(){
 			if(UrlParams.build != undefined){
 				var builder = new Builder(document.body);
-			} else if(UrlParams.lol != undefined){
-				// Do fucking nothing :D LOL
 			} else {
 				function onYouTubeIframeAPIReady() {
 					console.debug("YT Ready");
@@ -48,8 +40,8 @@
 			}
 		};
 		</script>
-		<link rel="stylesheet" href="/public/css/style.css">
+		<link rel="stylesheet" href="/src/css/style.css">
 	</head>
-	<body onload="pageLoaded();">
+	<body onload="documentLoaded()">
 	</body>
 </html>
