@@ -66,7 +66,7 @@ var PdfJsPlayer = function(resource){
 
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
-		if (position >= _numOfPages || position < 0) return;
+		if (position > _numOfPages || position < 0) return;
 		_pdf.getPage(position).then(function(page) {
 			_page = page;
 			_renderPage();
