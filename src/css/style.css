@@ -1,5 +1,6 @@
 	/* hsl(0-360,85%,55%) */
 	body{
+		/* Use this color in the future:; background: hsl(188,45%,40%); */
 		background: hsl(280,50%,22%);
 		color:white;
 		font-family:verdana;

@@ -60,6 +60,7 @@ var Presenter = function (containerElement, controlBar, data) {
 	this.play = function(skip){
 		if(_playing || !_this.isReady()) return;
 
+
 		// Register the newest start time
 		_lastStart = new Date().getTime();
 

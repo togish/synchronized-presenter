@@ -96,6 +96,7 @@ var YouTubePlayer = function (resource) {
 		};
 	};
 
+
 	// Sets the position of the playback, could be slidenumber or timestamp
 	this.seek = function(position){
 		if(typeof _player == "undefined") return;
@@ -133,6 +134,7 @@ var YouTubePlayer = function (resource) {
 		_this.htmlElement.appendChild(playerElement);
 
 		var _abortPlayback = true;
+		var _notPlayingTimer;
 
 		_player = new YT.Player(playerElement, {
 			height: '360',
@@ -152,7 +154,7 @@ var YouTubePlayer = function (resource) {
 					_player.seekTo(0, true);
 				},
 				'onStateChange': function(s){
-					if((_abortPlayback) && s.data == 1){ // Successfull playback. But only on init.
+					if(_abortPlayback && s.data == 1){ // Successfull playback. But only on init.
 						_player.pauseVideo();
 						_abortPlayback = false;
 						return;
@@ -161,8 +163,10 @@ var YouTubePlayer = function (resource) {
 					// Send event upstream and set variables
 					// NOT READY/NOT PLAYING:    -1 (unstarted), 3 (buffering)
 					if(s.data == -1 || s.data == 3){
-						_updateReady("player", false);
-						_updatePlaying(false);
+						_notPlayingTimer = setTimeout(function(){
+							_updateReady("player", false);
+							_updatePlaying(false);
+						},200);
 					}
 					// READY/NOT PLAYING:  0 (ended), 2 (paused), ??? Not relevant 5 (cued)
 					else if(s.data == 0 || s.data == 2 || s.data == 5){
@@ -176,6 +180,7 @@ var YouTubePlayer = function (resource) {
 					}
 					// READY/PLAYING: 1 (playing)
 					else if(s.data == 1){
+						clearTimeout(_notPlayingTimer);
 						_updateReady("meta", true);
 						_updatePlaying(true);
 					}
