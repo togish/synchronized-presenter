@@ -256,14 +256,15 @@
 	}
 	.segue.focus-offset .ajust-offset a, .segue.focus-offset .ajust-offset input,
 	.segue.focus-value .ajust-value a,
-	.segue.focus-value .remove, .segue.focus-offset .remove {
+	.segue.focus-value .remove, .segue.focus-offset .remove,
+	.segue:hover .remove {
 		display: inline-block !important;
 	}
 	.timeline-container.focused .segue:not(.focus-offset, .focus-value){
 		background:gray !important;
 	}
 	/* changes behaviour of the focused segue*/
-	.segue.focus-value, .segue.focus-offset {
+	.segue.focus-value, .segue.focus-offset, .segue:hover {
 		width:auto !important;
 	}
 
