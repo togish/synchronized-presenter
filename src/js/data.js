@@ -110,7 +110,7 @@ var Data = function (eventElement) {
 			}
 
 			// Removes the segue at the given index and fires event about the change
-			eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SOURCE_REMOVED, {detail: viewport.segues.splice(index, 1)}));
+			eventElement.dispatchEvent(new CustomEvent(EventTypes.EVENT_SEGUE_REMOVED, {detail: viewport.segues.splice(index, 1)}));
 		});
 	};
 
