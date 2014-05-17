@@ -432,19 +432,11 @@ var Data = function (eventElement) {
 		} else if(typeof UrlParams.url == "string"){
 			_this.fromUrl(UrlParams.url);
 		} else if(typeof UrlParams.build == "string" || defaultToNew){
-			_this.newPresentation();
+			_buildPresentation();
 		} else {
 			_this.notFoundDialog();
 		}
 	};
-
-	/*
-	 * Creates a new empty presentation and loads it
-	 */
-	this.newPresentation = function(){
-		_buildPresentation();
-	};
-
 
 	// Function called when a fade needs to be disposed
 	var _disposeFade = function(){};
@@ -568,7 +560,9 @@ var Data = function (eventElement) {
 		var classList = {
 			load: _this.loadSaveDialog,
 			link: _this.linkOpen,
-			create: _this.create
+			create: function(){
+				if(confirm("All data will be lost! Continue?")) window.location = _this.presenterBasePath + "?build=true";
+			}
 		};
 
 		for (var className in classList) {
